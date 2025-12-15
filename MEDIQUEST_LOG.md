@@ -41,6 +41,7 @@
 - Tile Picker (dev helper) adicionado: botão “Tile Picker” abre uma visualização do `Room_Builder_32x32.png`; ao clicar mostra coords x,y do tile para mapear sprites rapidamente.
 - Estrutura para sprites de cama/cadeira criada (`SPRITE_SHEETS.interiors`), mantendo fallback desenhado caso coordenadas não estejam definidas.
 - Tile Picker agora permite aplicar coordenadas diretamente em bed/chair via evento `setTileOverride` + persistência em localStorage (não precisa editar código).
+- Tile Picker agora permite escolher o tileset (Room_Builder_32x32 ou Interiors_32x32) para salvar coords e aplicar override (bed/chair) sem tocar em código.
 
 **Arquivos tocados:** `assets/limezu/interiors/Interiors_32x32.png`, `assets/limezu/interiors/Room_Builder_32x32.png`, `MEDIQUEST_LOG.md`.
 

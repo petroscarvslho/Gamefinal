@@ -143,12 +143,17 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     const handler = (ev: Event) => {
       const detail = (ev as CustomEvent).detail;
       if (!detail?.type || typeof detail.x !== 'number' || typeof detail.y !== 'number') return;
-      spriteOverridesRef.current[detail.type] = { x: detail.x, y: detail.y };
+      const key = detail.sheet && sheetExists(detail.sheet)
+        ? `${detail.sheet}:${detail.type}`
+        : `${detail.type}`;
+      spriteOverridesRef.current[key] = { x: detail.x, y: detail.y };
       localStorage.setItem('tileOverrides', JSON.stringify(spriteOverridesRef.current));
     };
     window.addEventListener('setTileOverride', handler);
     return () => window.removeEventListener('setTileOverride', handler);
   }, []);
+
+  const sheetExists = (sheetKey: string) => !!SPRITE_SHEETS[sheetKey as keyof typeof SPRITE_SHEETS];
 
   const checkInteraction = () => {
     const p = playerRef.current;
@@ -273,7 +278,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     const img = spriteImagesRef.current[sheetKey];
     if (!sheet || !img) return false;
     // Check overrides first (for interiors like bed/chair)
-    const override = spriteOverridesRef.current[variant as string];
+    const override = spriteOverridesRef.current[`${sheetKey}:${variant}`] || spriteOverridesRef.current[variant as string];
     const coords = override || sheet.map[variant];
     if (!coords) return false;
     ctx.drawImage(
