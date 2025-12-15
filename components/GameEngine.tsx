@@ -244,7 +244,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
   const drawSpriteTile = (
     ctx: CanvasRenderingContext2D,
     sheetKey: keyof typeof SPRITE_SHEETS,
-    variant: keyof (typeof SPRITE_SHEETS)['room']['map'],
+    variant: keyof (typeof SPRITE_SHEETS)['room']['map'] | keyof (typeof SPRITE_SHEETS)['interiors']['map'],
     dx: number,
     dy: number
   ) => {
@@ -341,22 +341,25 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
         break;
 
       case TileType.BED:
-        drawShadow(ctx, x, y + 28, 28);
-        // Frame
-        drawRoundedBox(ctx, x + 2, y + 10, TILE_SIZE - 4, 18, 2, '#ffffff', PALETTE.metalBase);
-        // Blanket (Rounded Top)
-        ctx.fillStyle = PALETTE.bedSheet;
-        ctx.beginPath();
-        ctx.roundRect(x + 3, y + 14, TILE_SIZE - 6, 13, [4, 4, 0, 0]);
-        ctx.fill();
-        // Pillow (Soft Round)
-        ctx.fillStyle = PALETTE.bedPillow;
-        ctx.beginPath();
-        ctx.roundRect(x + 6, y + 4, TILE_SIZE - 12, 8, 4);
-        ctx.fill();
-        ctx.strokeStyle = PALETTE.metalBase;
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        const bedSprite = spritesReady && drawSpriteTile(ctx, 'interiors', 'bed' as any, x, y);
+        if (!bedSprite) {
+          drawShadow(ctx, x, y + 28, 28);
+          // Frame
+          drawRoundedBox(ctx, x + 2, y + 10, TILE_SIZE - 4, 18, 2, '#ffffff', PALETTE.metalBase);
+          // Blanket (Rounded Top)
+          ctx.fillStyle = PALETTE.bedSheet;
+          ctx.beginPath();
+          ctx.roundRect(x + 3, y + 14, TILE_SIZE - 6, 13, [4, 4, 0, 0]);
+          ctx.fill();
+          // Pillow (Soft Round)
+          ctx.fillStyle = PALETTE.bedPillow;
+          ctx.beginPath();
+          ctx.roundRect(x + 6, y + 4, TILE_SIZE - 12, 8, 4);
+          ctx.fill();
+          ctx.strokeStyle = PALETTE.metalBase;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
         break;
 
       case TileType.MRI_MACHINE:
@@ -408,24 +411,27 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
         break;
 
       case TileType.CHAIR_WAITING:
-        drawShadow(ctx, x + 4, y + 28, 20);
-        // Back (Rounded top)
-        ctx.beginPath();
-        ctx.roundRect(x + 6, y + 6, 20, 10, [4, 4, 2, 2]);
-        ctx.fillStyle = '#60a5fa';
-        ctx.fill();
-        ctx.strokeStyle = '#2563eb';
-        ctx.stroke();
-        // Seat
-        ctx.beginPath();
-        ctx.roundRect(x + 6, y + 18, 20, 6, 2);
-        ctx.fillStyle = '#3b82f6';
-        ctx.fill();
-        ctx.stroke();
-        // Legs
-        ctx.fillStyle = PALETTE.metalBase;
-        ctx.fillRect(x + 8, y + 24, 2, 6);
-        ctx.fillRect(x + 22, y + 24, 2, 6);
+        const chairSprite = spritesReady && drawSpriteTile(ctx, 'interiors', 'chair' as any, x, y);
+        if (!chairSprite) {
+          drawShadow(ctx, x + 4, y + 28, 20);
+          // Back (Rounded top)
+          ctx.beginPath();
+          ctx.roundRect(x + 6, y + 6, 20, 10, [4, 4, 2, 2]);
+          ctx.fillStyle = '#60a5fa';
+          ctx.fill();
+          ctx.strokeStyle = '#2563eb';
+          ctx.stroke();
+          // Seat
+          ctx.beginPath();
+          ctx.roundRect(x + 6, y + 18, 20, 6, 2);
+          ctx.fillStyle = '#3b82f6';
+          ctx.fill();
+          ctx.stroke();
+          // Legs
+          ctx.fillStyle = PALETTE.metalBase;
+          ctx.fillRect(x + 8, y + 24, 2, 6);
+          ctx.fillRect(x + 22, y + 24, 2, 6);
+        }
         break;
 
       case TileType.DESK_RECEPTION:

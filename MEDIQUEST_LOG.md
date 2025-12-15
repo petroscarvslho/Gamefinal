@@ -39,6 +39,7 @@
 - Reescrito o histórico do git para remover o pacote completo (assets pesados) e manter apenas o subset necessário. Foi feito `git push --force`.
 - Controles touch adicionados (D-Pad + botão AÇÃO) simulando teclas; HUD mobile só aparece sem diálogo.
 - Tile Picker (dev helper) adicionado: botão “Tile Picker” abre uma visualização do `Room_Builder_32x32.png`; ao clicar mostra coords x,y do tile para mapear sprites rapidamente.
+- Estrutura para sprites de cama/cadeira criada (`SPRITE_SHEETS.interiors`), mantendo fallback desenhado caso coordenadas não estejam definidas.
 
 **Arquivos tocados:** `assets/limezu/interiors/Interiors_32x32.png`, `assets/limezu/interiors/Room_Builder_32x32.png`, `MEDIQUEST_LOG.md`.
 

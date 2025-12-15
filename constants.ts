@@ -172,5 +172,14 @@ export const SPRITE_SHEETS = {
       wallAlt: { x: 1, y: 5 },
       door: { x: 6, y: 6 }         // porta simples
     }
+  },
+  interiors: {
+    src: '/assets/limezu/interiors/Interiors_32x32.png',
+    tileSize: 32,
+    map: {
+      // Preencher conforme necessidade. Mantém fallback se não definido.
+      chair: null as null | { x: number; y: number },
+      bed: null as null | { x: number; y: number }
+    }
   }
 };
