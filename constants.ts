@@ -159,3 +159,18 @@ export const generateHospitalMap = (): TileType[][] => {
 };
 
 export const INITIAL_MAP = generateHospitalMap();
+
+// Spritesheets (LimeZu Modern Interiors) - 32x32
+export const SPRITE_SHEETS = {
+  room: {
+    src: '/assets/limezu/interiors/Room_Builder_32x32.png',
+    tileSize: 32,
+    map: {
+      floor: { x: 0, y: 0 },       // piso frio claro
+      floorWarm: { x: 1, y: 0 },   // piso mais quente
+      wall: { x: 0, y: 5 },        // parede padrão
+      wallAlt: { x: 1, y: 5 },
+      door: { x: 6, y: 6 }         // porta simples
+    }
+  }
+};

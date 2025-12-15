@@ -31,6 +31,19 @@
 - Seguir o workflow (log → commit → push) em toda alteração.
 - Continuar melhorias de UI/arte e interação conforme sessão 1.
 
+### Sessão 3 — 2024-12-15
+**O que foi feito:**
+- Importado assets do pacote LimeZu (Modern Interiors) para uso futuro no mapa.
+- Copiados tiles de interiores 32x32 (`Interiors_32x32.png` e `Room_Builder_32x32.png`) para `assets/limezu/interiors/`.
+- Engine agora usa spritesheet para piso/parede/porta (Room_Builder_32x32). Fallback mantém formas antigas se sprites não carregarem.
+
+**Arquivos tocados:** `assets/limezu/interiors/Interiors_32x32.png`, `assets/limezu/interiors/Room_Builder_32x32.png`, `MEDIQUEST_LOG.md`.
+
+**Próximos passos sugeridos:**
+- Mapear coordenadas dos tiles e substituir o drawTile para usar spritesheet (manter `TILE_SIZE=32`).
+- Selecionar subset (paredes, pisos, cadeiras, camas, portas) para o mapa atual.
+- Opcional: adicionar assets de personagens/objetos se necessário.
+
 ### Sessão 1 — 2024-12-15
 **O que foi feito:**
 - UI base: fundo com gradientes, fonte Space Grotesk para texto geral e Press Start 2P para detalhes retrô.

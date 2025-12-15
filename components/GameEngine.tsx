@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
-import { INITIAL_MAP, TILE_SIZE, PALETTE, MAP_WIDTH, MAP_HEIGHT, MOVE_SPEED, INTERACTION_DISTANCE } from '../constants';
+import { INITIAL_MAP, TILE_SIZE, PALETTE, MAP_WIDTH, MAP_HEIGHT, MOVE_SPEED, INTERACTION_DISTANCE, SPRITE_SHEETS } from '../constants';
 import { Direction, Entity, NPC, TileType } from '../types';
 
 interface GameEngineProps {
@@ -11,6 +11,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
   const frameCountRef = useRef<number>(0);
+  const spriteImagesRef = useRef<{ [key: string]: HTMLImageElement | null }>({});
+  const spritesLoadedRef = useRef<boolean>(false);
   
   const playerRef = useRef<Entity>({
     id: 'player',
@@ -107,6 +109,25 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDialogueOpen]);
+
+  // --- Load Spritesheets ---
+  useEffect(() => {
+    const entries = Object.entries(SPRITE_SHEETS);
+    let loadedCount = 0;
+    if (entries.length === 0) return;
+
+    entries.forEach(([key, sheet]) => {
+      const img = new Image();
+      img.src = sheet.src;
+      img.onload = () => {
+        loadedCount += 1;
+        if (loadedCount === entries.length) {
+          spritesLoadedRef.current = true;
+        }
+      };
+      spriteImagesRef.current[key] = img;
+    });
+  }, []);
 
   const checkInteraction = () => {
     const p = playerRef.current;
@@ -220,7 +241,35 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     ctx.stroke();
   };
 
+  const drawSpriteTile = (
+    ctx: CanvasRenderingContext2D,
+    sheetKey: keyof typeof SPRITE_SHEETS,
+    variant: keyof (typeof SPRITE_SHEETS)['room']['map'],
+    dx: number,
+    dy: number
+  ) => {
+    const sheet = SPRITE_SHEETS[sheetKey];
+    const img = spriteImagesRef.current[sheetKey];
+    if (!sheet || !img) return false;
+    const coords = sheet.map[variant];
+    if (!coords) return false;
+    ctx.drawImage(
+      img,
+      coords.x * sheet.tileSize,
+      coords.y * sheet.tileSize,
+      sheet.tileSize,
+      sheet.tileSize,
+      dx,
+      dy,
+      TILE_SIZE,
+      TILE_SIZE
+    );
+    return true;
+  };
+
   const drawTile = (ctx: CanvasRenderingContext2D, tile: TileType, x: number, y: number) => {
+    const spritesReady = spritesLoadedRef.current;
+
     // 1. Draw Floor
     if (tile !== TileType.WALL) {
       if (tile === TileType.FLOOR_OR) {
@@ -233,49 +282,62 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
       } else {
         // Standard or Waiting Room
         const isWaiting = x > 18 * TILE_SIZE && y > 12 * TILE_SIZE;
-        ctx.fillStyle = isWaiting ? PALETTE.floorWarm : PALETTE.floorBase;
-        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        const spriteUsed =
+          spritesReady &&
+          drawSpriteTile(ctx, 'room', isWaiting ? 'floorWarm' : 'floor', x, y);
 
-        // Soft checker pattern for depth
-        const isAlt = ((x / TILE_SIZE) + (y / TILE_SIZE)) % 2 === 0;
-        ctx.fillStyle = isWaiting ? 'rgba(255, 213, 128, 0.05)' : 'rgba(148, 163, 184, 0.05)';
-        if (isAlt) ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-        
-        // Detailed Tile border (Subtle)
-        ctx.strokeStyle = isWaiting ? PALETTE.floorWarmDark : PALETTE.floorTileEdge;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.rect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-        ctx.stroke();
+        if (!spriteUsed) {
+          ctx.fillStyle = isWaiting ? PALETTE.floorWarm : PALETTE.floorBase;
+          ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+          // Soft checker pattern for depth
+          const isAlt = ((x / TILE_SIZE) + (y / TILE_SIZE)) % 2 === 0;
+          ctx.fillStyle = isWaiting ? 'rgba(255, 213, 128, 0.05)' : 'rgba(148, 163, 184, 0.05)';
+          if (isAlt) ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+          
+          // Detailed Tile border (Subtle)
+          ctx.strokeStyle = isWaiting ? PALETTE.floorWarmDark : PALETTE.floorTileEdge;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.rect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+          ctx.stroke();
+        }
       }
     }
 
     // 2. Draw Objects
     switch (tile) {
       case TileType.WALL:
-        // Main Wall Face
-        ctx.fillStyle = PALETTE.wallBase;
-        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-        
-        // Baseboard (Darker bottom)
-        ctx.fillStyle = PALETTE.baseboard;
-        ctx.fillRect(x, y + TILE_SIZE - 6, TILE_SIZE, 6);
-        
-        // Cap (Lighter top)
-        ctx.fillStyle = PALETTE.wallCap;
-        ctx.fillRect(x, y, TILE_SIZE, 6);
-        
-        // Side Outline (Subtle depth)
-        ctx.fillStyle = 'rgba(0,0,0,0.05)';
-        ctx.fillRect(x + TILE_SIZE - 1, y, 1, TILE_SIZE);
+        const wallSprite =
+          spritesReady && (drawSpriteTile(ctx, 'room', 'wall', x, y) || drawSpriteTile(ctx, 'room', 'wallAlt', x, y));
+        if (!wallSprite) {
+          // Main Wall Face (fallback)
+          ctx.fillStyle = PALETTE.wallBase;
+          ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+          
+          // Baseboard (Darker bottom)
+          ctx.fillStyle = PALETTE.baseboard;
+          ctx.fillRect(x, y + TILE_SIZE - 6, TILE_SIZE, 6);
+          
+          // Cap (Lighter top)
+          ctx.fillStyle = PALETTE.wallCap;
+          ctx.fillRect(x, y, TILE_SIZE, 6);
+          
+          // Side Outline (Subtle depth)
+          ctx.fillStyle = 'rgba(0,0,0,0.05)';
+          ctx.fillRect(x + TILE_SIZE - 1, y, 1, TILE_SIZE);
+        }
         break;
 
       case TileType.DOOR:
-        ctx.fillStyle = PALETTE.metalBase;
-        ctx.fillRect(x, y, 4, TILE_SIZE); 
-        ctx.fillRect(x + TILE_SIZE - 4, y, 4, TILE_SIZE); 
-        ctx.fillStyle = '#cbd5e1'; 
-        ctx.fillRect(x + 4, y + TILE_SIZE - 4, TILE_SIZE - 8, 4);
+        const doorSprite = spritesReady && drawSpriteTile(ctx, 'room', 'door', x, y);
+        if (!doorSprite) {
+          ctx.fillStyle = PALETTE.metalBase;
+          ctx.fillRect(x, y, 4, TILE_SIZE); 
+          ctx.fillRect(x + TILE_SIZE - 4, y, 4, TILE_SIZE); 
+          ctx.fillStyle = '#cbd5e1'; 
+          ctx.fillRect(x + 4, y + TILE_SIZE - 4, TILE_SIZE - 8, 4);
+        }
         break;
 
       case TileType.BED:
