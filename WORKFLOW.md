@@ -11,11 +11,13 @@ Use este guia em toda sessão de trabalho (novo chat ou agente).
 1) Documentar o que foi feito em `MEDIQUEST_LOG.md` (o que, por quê, arquivos afetados).
 2) `git status` para conferir alterações.
 3) `git add .`
-4) `git commit -m "<mensagem curta>"`  
-   Exemplos:  
-   - `feat: highlight interativo e sprites refinados`  
+4) `git commit -m "<mensagem curta>"`
+   Exemplos:
+   - `feat: highlight interativo e sprites refinados`
    - `chore: ajustar HUD e documentação`
 5) `git push` (remoto já configurado para `https://github.com/petroscarvslho/Gamefinal.git`).
+   - Evitar subir assets gigantes; se trouxer packs, copie só os PNG usados para `assets/...` e ignore o resto.
+   - Se precisar reescrever histórico para remover peso, avisar no log e usar push --force (somente com autorização).
 
 ## Scripts úteis
 - Instalar deps: `npm install`
