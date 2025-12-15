@@ -13,6 +13,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
   const frameCountRef = useRef<number>(0);
   const spriteImagesRef = useRef<{ [key: string]: HTMLImageElement | null }>({});
   const spritesLoadedRef = useRef<boolean>(false);
+  const spriteOverridesRef = useRef<Record<string, { x: number; y: number }>>({});
   
   const playerRef = useRef<Entity>({
     id: 'player',
@@ -127,6 +128,26 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
       };
       spriteImagesRef.current[key] = img;
     });
+
+    // Load overrides from localStorage
+    try {
+      const raw = localStorage.getItem('tileOverrides');
+      if (raw) {
+        spriteOverridesRef.current = JSON.parse(raw);
+      }
+    } catch (e) {
+      console.warn('Failed to load tile overrides', e);
+    }
+
+    // Listen to override events from Tile Picker UI
+    const handler = (ev: Event) => {
+      const detail = (ev as CustomEvent).detail;
+      if (!detail?.type || typeof detail.x !== 'number' || typeof detail.y !== 'number') return;
+      spriteOverridesRef.current[detail.type] = { x: detail.x, y: detail.y };
+      localStorage.setItem('tileOverrides', JSON.stringify(spriteOverridesRef.current));
+    };
+    window.addEventListener('setTileOverride', handler);
+    return () => window.removeEventListener('setTileOverride', handler);
   }, []);
 
   const checkInteraction = () => {
@@ -251,7 +272,9 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     const sheet = SPRITE_SHEETS[sheetKey];
     const img = spriteImagesRef.current[sheetKey];
     if (!sheet || !img) return false;
-    const coords = sheet.map[variant];
+    // Check overrides first (for interiors like bed/chair)
+    const override = spriteOverridesRef.current[variant as string];
+    const coords = override || sheet.map[variant];
     if (!coords) return false;
     ctx.drawImage(
       img,

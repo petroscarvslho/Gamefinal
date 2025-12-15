@@ -10,6 +10,7 @@ const emitKey = (code: string, type: 'keydown' | 'keyup') => {
 const App: React.FC = () => {
   const [activeNpc, setActiveNpc] = useState<NPC | null>(null);
   const [showTilePicker, setShowTilePicker] = useState(false);
+  const [pickerTarget, setPickerTarget] = useState<'bed' | 'chair'>('bed');
 
   return (
     <div className="w-full h-screen relative bg-gradient-to-br from-slate-950/90 via-slate-900/80 to-slate-950">
@@ -114,7 +115,20 @@ const App: React.FC = () => {
         </button>
         {showTilePicker && (
           <div className="bg-slate-900/90 border border-cyan-300/40 rounded-lg shadow-2xl p-3 max-w-xs max-h-72 overflow-auto backdrop-blur">
-            <div className="text-xs text-slate-200 mb-2">Clique no tile para ver coords (Room_Builder_32x32)</div>
+            <div className="text-xs text-slate-200 mb-2 space-y-1">
+              <div>Clique no tile para ver coords (Room_Builder_32x32)</div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-slate-400">Aplicar em:</span>
+                <select
+                  className="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-white/10"
+                  value={pickerTarget}
+                  onChange={(e) => setPickerTarget(e.target.value as 'bed' | 'chair')}
+                >
+                  <option value="bed">bed</option>
+                  <option value="chair">chair</option>
+                </select>
+              </div>
+            </div>
             <img
               src="/assets/limezu/interiors/Room_Builder_32x32.png"
               alt="Room Builder"
@@ -123,8 +137,9 @@ const App: React.FC = () => {
                 const rect = (e.target as HTMLImageElement).getBoundingClientRect();
                 const tx = Math.floor(((e.clientX - rect.left) / rect.width) * ((e.target as HTMLImageElement).naturalWidth / 32));
                 const ty = Math.floor(((e.clientY - rect.top) / rect.height) * ((e.target as HTMLImageElement).naturalHeight / 32));
-                console.log('Tile coords:', { x: tx, y: ty });
-                alert(`Tile coords: x=${tx}, y=${ty}`);
+                const detail = { type: pickerTarget, x: tx, y: ty };
+                window.dispatchEvent(new CustomEvent('setTileOverride', { detail }));
+                alert(`Tile ${pickerTarget}: x=${tx}, y=${ty} salvo`);
               }}
             />
           </div>
