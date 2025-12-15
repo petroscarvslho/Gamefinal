@@ -142,6 +142,16 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     // Listen to override events from Tile Picker UI
     const handler = (ev: Event) => {
       const detail = (ev as CustomEvent).detail;
+      if (!detail) return;
+      // Reset override for a key
+      if (detail.reset && detail.key) {
+        const key = detail.sheet && sheetExists(detail.sheet)
+          ? `${detail.sheet}:${detail.key}`
+          : `${detail.key}`;
+        delete spriteOverridesRef.current[key];
+        localStorage.setItem('tileOverrides', JSON.stringify(spriteOverridesRef.current));
+        return;
+      }
       if (!detail?.type || typeof detail.x !== 'number' || typeof detail.y !== 'number') return;
       const key = detail.sheet && sheetExists(detail.sheet)
         ? `${detail.sheet}:${detail.type}`

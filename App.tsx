@@ -11,7 +11,7 @@ const emitKey = (code: string, type: 'keydown' | 'keyup') => {
 const App: React.FC = () => {
   const [activeNpc, setActiveNpc] = useState<NPC | null>(null);
   const [showTilePicker, setShowTilePicker] = useState(false);
-  const [pickerTarget, setPickerTarget] = useState<'bed' | 'chair'>('bed');
+  const [pickerTarget, setPickerTarget] = useState<string>('bed');
   const [pickerSheet, setPickerSheet] = useState<'room' | 'interiors'>('room');
 
   return (
@@ -133,11 +133,25 @@ const App: React.FC = () => {
                 <select
                   className="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-white/10"
                   value={pickerTarget}
-                  onChange={(e) => setPickerTarget(e.target.value as 'bed' | 'chair')}
+                  onChange={(e) => setPickerTarget(e.target.value)}
                 >
                   <option value="bed">bed</option>
                   <option value="chair">chair</option>
+                  <option value="floor">floor</option>
+                  <option value="floorWarm">floorWarm</option>
+                  <option value="wall">wall</option>
+                  <option value="wallAlt">wallAlt</option>
+                  <option value="door">door</option>
                 </select>
+                <button
+                  className="ml-2 bg-slate-800 text-white text-[11px] px-2 py-1 rounded border border-white/10"
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('setTileOverride', { detail: { reset: true, key: pickerTarget, sheet: pickerSheet } }));
+                    alert(`Override de ${pickerTarget} limpo`);
+                  }}
+                >
+                  Limpar
+                </button>
               </div>
             </div>
             <img
