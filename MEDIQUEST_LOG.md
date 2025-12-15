@@ -1,0 +1,38 @@
+# MediQuest RPG — Log & Instruções para agentes
+
+> **Regra:** Sempre que abrir um novo chat sobre este projeto, leia este arquivo antes de qualquer coisa. Documente aqui toda mudança relevante (UI, lógica, build, deps, setup). Não altere nem se relacione ao projeto PixelMed; são projetos distintos.
+
+## Informações rápidas
+- **Nome do projeto:** MediQuest (hospital top‑down RPG)
+- **Stack:** React + Vite + TypeScript; canvas 2D para mapa/sprites.
+- **Pasta base:** `mediquest-rpg`
+- **Chave de IA:** use `GEMINI_API_KEY` (ou `API_KEY`) em `.env.local` para diálogos.
+- **Script dev:** `npm install` → `npm run dev`
+- **Build:** `npm run build`
+- **Objetivo:** Polir UI/UX, interações e arte do RPG hospitalar; deixar pronto para deploy.
+
+## Instruções para o fluxo de trabalho
+1) Atualize este `MEDIQUEST_LOG.md` a cada alteração significativa (o que foi feito, por quê, arquivos afetados).
+2) Não mexer em `pixelmed-v3.html` ou em qualquer coisa do PixelMed; são projetos separados.
+3) Manter git organizado: commits pequenos e descritivos. Se criar remotos, registrar aqui a URL.
+4) Se adicionar dependências, anotar a razão e qualquer passo extra de setup.
+5) Ao finalizar uma sessão, liste “Próximos passos” para o próximo agente.
+
+## Histórico de sessões
+
+### Sessão 1 — 2024-12-15
+**O que foi feito:**
+- UI base: fundo com gradientes, fonte Space Grotesk para texto geral e Press Start 2P para detalhes retrô.
+- Overlay/HUD: cartão de controles estilizado, badge de status “pronto para interação”, hint mobile mais polido.
+- Diálogo: modal redesenhado com vidro escuro, bordas ciano, balões com contraste e input mais legível.
+- Canvas: piso com checker sutil para profundidade e prompt “FALAR [SPACE]” sobre NPC mais próximo no raio.
+- Gemini: aceita `GEMINI_API_KEY` além de `API_KEY` em `services/gemini.ts`.
+- Repositório: projeto copiado para `mediquest-rpg` (espaço de trabalho write), `git init` criado aqui.
+
+**Arquivos tocados:** `index.html`, `App.tsx`, `components/DialogueBox.tsx`, `components/GameEngine.tsx`, `services/gemini.ts`, `.gitignore` (já existia), novo `MEDIQUEST_LOG.md`.
+
+**Próximos passos sugeridos:**
+- Refinar sprites de player/NPC (variação de cabelos/roupas), destacar objetos interativos (portas/mesas) com outline animado.
+- Ajustar colisão fina e movimento (suavizar aceleração ou velocidade diagonal).
+- Criar uma paleta de UI consistente em um arquivo de tema e reduzir uso de Tailwind CDN se quiser bundling puro.
+- Adicionar estados de “missão” ou pequenos objetivos para guiar o jogador.
