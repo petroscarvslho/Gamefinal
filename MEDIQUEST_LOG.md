@@ -37,6 +37,7 @@
 - Copiados tiles de interiores 32x32 (`Interiors_32x32.png` e `Room_Builder_32x32.png`) para `assets/limezu/interiors/`.
 - Engine agora usa spritesheet para piso/parede/porta (Room_Builder_32x32). Fallback mantém formas antigas se sprites não carregarem.
 - Reescrito o histórico do git para remover o pacote completo (assets pesados) e manter apenas o subset necessário. Foi feito `git push --force`.
+- Controles touch adicionados (D-Pad + botão AÇÃO) simulando teclas; HUD mobile só aparece sem diálogo.
 
 **Arquivos tocados:** `assets/limezu/interiors/Interiors_32x32.png`, `assets/limezu/interiors/Room_Builder_32x32.png`, `MEDIQUEST_LOG.md`.
 

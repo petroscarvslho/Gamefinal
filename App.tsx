@@ -3,6 +3,10 @@ import GameEngine from './components/GameEngine';
 import DialogueBox from './components/DialogueBox';
 import { NPC } from './types';
 
+const emitKey = (code: string, type: 'keydown' | 'keyup') => {
+  window.dispatchEvent(new KeyboardEvent(type, { code }));
+};
+
 const App: React.FC = () => {
   const [activeNpc, setActiveNpc] = useState<NPC | null>(null);
 
@@ -40,6 +44,54 @@ const App: React.FC = () => {
             <span className="text-white text-[11px] text-center leading-tight">Touch<br/>Controls</span>
         </div>
       </div>
+
+      {/* Mobile Controls (D-Pad + Action) */}
+      {!activeNpc && (
+        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between md:hidden gap-4 pointer-events-none">
+          <div className="pointer-events-auto flex flex-col items-center gap-2">
+            <div className="flex gap-2">
+              <button
+                className="w-12 h-12 rounded-full bg-slate-800/70 border border-cyan-300/40 text-white text-xl shadow-lg backdrop-blur"
+                onPointerDown={() => emitKey('ArrowUp', 'keydown')}
+                onPointerUp={() => emitKey('ArrowUp', 'keyup')}
+              >
+                ↑
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button
+                className="w-12 h-12 rounded-full bg-slate-800/70 border border-cyan-300/40 text-white text-xl shadow-lg backdrop-blur"
+                onPointerDown={() => emitKey('ArrowLeft', 'keydown')}
+                onPointerUp={() => emitKey('ArrowLeft', 'keyup')}
+              >
+                ←
+              </button>
+              <button
+                className="w-12 h-12 rounded-full bg-slate-800/70 border border-cyan-300/40 text-white text-xl shadow-lg backdrop-blur"
+                onPointerDown={() => emitKey('ArrowDown', 'keydown')}
+                onPointerUp={() => emitKey('ArrowDown', 'keyup')}
+              >
+                ↓
+              </button>
+              <button
+                className="w-12 h-12 rounded-full bg-slate-800/70 border border-cyan-300/40 text-white text-xl shadow-lg backdrop-blur"
+                onPointerDown={() => emitKey('ArrowRight', 'keydown')}
+                onPointerUp={() => emitKey('ArrowRight', 'keyup')}
+              >
+                →
+              </button>
+            </div>
+          </div>
+
+          <button
+            className="pointer-events-auto w-16 h-16 rounded-full bg-emerald-600/80 border border-emerald-300/60 text-white text-sm font-semibold shadow-[0_10px_30px_rgba(16,185,129,0.35)] backdrop-blur"
+            onPointerDown={() => emitKey('Space', 'keydown')}
+            onPointerUp={() => emitKey('Space', 'keyup')}
+          >
+            AÇÃO
+          </button>
+        </div>
+      )}
 
       {/* Status badge */}
       {!activeNpc && (
