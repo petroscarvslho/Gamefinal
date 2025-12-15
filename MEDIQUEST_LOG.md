@@ -20,6 +20,17 @@
 
 ## Histórico de sessões
 
+### Sessão 2 — 2024-12-15
+**O que foi feito:**
+- Adicionado `WORKFLOW.md` com checklist de commits/push, convenções e scripts.
+- Registrado fluxo para novos agentes: ler este log, documentar mudanças e sempre fazer push.
+
+**Arquivos tocados:** `WORKFLOW.md`, `MEDIQUEST_LOG.md`.
+
+**Próximos passos sugeridos:**
+- Seguir o workflow (log → commit → push) em toda alteração.
+- Continuar melhorias de UI/arte e interação conforme sessão 1.
+
 ### Sessão 1 — 2024-12-15
 **O que foi feito:**
 - UI base: fundo com gradientes, fonte Space Grotesk para texto geral e Press Start 2P para detalhes retrô.
