@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LimeZu Hospital Tile Preview</title>
+  <style>
+    body {
+      background: #1e293b;
+      color: white;
+      font-family: monospace;
+      padding: 20px;
+    }
+    h1 { color: #22d3ee; }
+    .controls {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #0f172a;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #22d3ee;
+      z-index: 100;
+    }
+    .controls select, .controls input {
+      margin: 5px;
+      padding: 5px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(16, 64px);
+      gap: 2px;
+      margin-top: 20px;
+    }
+    .tile {
+      width: 64px;
+      height: 64px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      position: relative;
+      cursor: pointer;
+      image-rendering: pixelated;
+    }
+    .tile:hover {
+      border-color: #22d3ee;
+      box-shadow: 0 0 10px #22d3ee;
+    }
+    .tile img {
+      width: 64px;
+      height: 64px;
+      image-rendering: pixelated;
+    }
+    .tile .coords {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.8);
+      font-size: 8px;
+      text-align: center;
+      color: #fbbf24;
+    }
+    .tile.selected {
+      border: 3px solid #22c55e;
+    }
+    .selected-info {
+      margin-top: 10px;
+      padding: 10px;
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    .row-label {
+      grid-column: 1 / -1;
+      background: #334155;
+      padding: 5px;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #fbbf24;
+    }
+  </style>
+</head>
+<body>
+  <h1>LimeZu Hospital Sprite Sheet - Tile Preview</h1>
+  <p>Clique em um tile para ver suas coordenadas. Use para mapear no TilePicker.</p>
+
+  <div class="controls">
+    <label>Sprite Sheet:</label>
+    <select id="sheetSelect" onchange="loadSheet()">
+      <option value="Hospital_32x32.png">Hospital</option>
+      <option value="Interiors_32x32.png">Interiors</option>
+      <option value="Generic_32x32.png">Generic</option>
+      <option value="Bathroom_32x32.png">Bathroom</option>
+      <option value="Room_Builder_32x32.png">Room Builder</option>
+    </select>
+    <br>
+    <label>Ir para linha:</label>
+    <input type="number" id="gotoRow" min="0" max="110" value="0" onchange="scrollToRow()">
+    <br>
+    <div class="selected-info" id="selectedInfo">
+      Nenhum tile selecionado
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const TILE_SIZE = 32;
+    let currentSheet = 'Hospital_32x32.png';
+    let img = new Image();
+
+    function loadSheet() {
+      currentSheet = document.getElementById('sheetSelect').value;
+      img.src = `/assets/limezu/interiors/${currentSheet}`;
+    }
+
+    img.onload = function() {
+      const cols = Math.floor(img.width / TILE_SIZE);
+      const rows = Math.floor(img.height / TILE_SIZE);
+
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      for (let y = 0; y < rows; y++) {
+        // Row label every 10 rows
+        if (y % 10 === 0) {
+          const label = document.createElement('div');
+          label.className = 'row-label';
+          label.textContent = `=== Linhas ${y} - ${Math.min(y + 9, rows - 1)} ===`;
+          label.id = `row-${y}`;
+          grid.appendChild(label);
+        }
+
+        for (let x = 0; x < cols; x++) {
+          const tile = document.createElement('div');
+          tile.className = 'tile';
+          tile.dataset.x = x;
+          tile.dataset.y = y;
+
+          // Create canvas for this tile
+          const canvas = document.createElement('canvas');
+          canvas.width = 64;
+          canvas.height = 64;
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(img, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, 0, 0, 64, 64);
+
+          tile.appendChild(canvas);
+
+          const coords = document.createElement('div');
+          coords.className = 'coords';
+          coords.textContent = `${x},${y}`;
+          tile.appendChild(coords);
+
+          tile.onclick = () => selectTile(x, y);
+
+          grid.appendChild(tile);
+        }
+      }
+
+      document.getElementById('gotoRow').max = rows;
+    };
+
+    function selectTile(x, y) {
+      // Remove previous selection
+      document.querySelectorAll('.tile.selected').forEach(t => t.classList.remove('selected'));
+
+      // Select current
+      const tile = document.querySelector(`.tile[data-x="${x}"][data-y="${y}"]`);
+      if (tile) tile.classList.add('selected');
+
+      // Update info
+      const info = document.getElementById('selectedInfo');
+      info.innerHTML = `
+        <strong>Tile Selecionado:</strong><br>
+        X: ${x}, Y: ${y}<br>
+        <br>
+        <strong>Para usar no TilePicker:</strong><br>
+        1. Abra o Tile Picker no jogo<br>
+        2. Selecione "${currentSheet.replace('_32x32.png', '')}"<br>
+        3. Navegue até linha ${y}<br>
+        4. Clique no tile na coluna ${x}<br>
+        <br>
+        <strong>Código direto:</strong><br>
+        <code style="color: #22c55e">{ sheet: '${currentSheet.replace('_32x32.png', '').toLowerCase()}', x: ${x}, y: ${y} }</code>
+      `;
+    }
+
+    function scrollToRow() {
+      const row = document.getElementById('gotoRow').value;
+      const label = document.getElementById(`row-${Math.floor(row / 10) * 10}`);
+      if (label) label.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Load initial sheet
+    loadSheet();
+  </script>
+</body>
+</html>

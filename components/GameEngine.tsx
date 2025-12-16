@@ -32,8 +32,17 @@ const COLORS = {
 
 const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const minimapCanvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
   const frameCountRef = useRef<number>(0);
+
+  // Camera suave
+  const cameraRef = useRef({ x: 0, y: 0 });
+  const cameraTargetRef = useRef({ x: 0, y: 0 });
+  const CAMERA_LERP = 0.08; // Velocidade da interpolação
+
+  // Estado do minimap
+  const [showMinimap, setShowMinimap] = useState(true);
 
   // Sprite images - personagens e tilesets
   const characterImagesRef = useRef<Record<string, HTMLImageElement>>({});
@@ -152,7 +161,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
   const keysPressed = useRef<Record<string, boolean>>({});
   const lastChatterTimeRef = useRef<Record<string, number>>({});
 
-  // === Sistema de Partículas ===
+  // === Sistema de Partículas Aprimorado ===
   interface Particle {
     x: number;
     y: number;
@@ -162,9 +171,11 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     maxLife: number;
     size: number;
     color: string;
+    type: 'dust' | 'sparkle' | 'ambient' | 'highlight';
   }
   const particlesRef = useRef<Particle[]>([]);
   const lastParticleTimeRef = useRef<number>(0);
+  const lastAmbientParticleRef = useRef<number>(0);
 
   // Falas ambientais dos NPCs
   const NPC_CHATTER: Record<string, string[]> = {
@@ -260,6 +271,10 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
       keysPressed.current[e.code] = true;
       if ((e.code === 'Space' || e.code === 'Enter') && !isDialogueOpen) {
         checkInteraction();
+      }
+      // Toggle minimap com M
+      if (e.code === 'KeyM') {
+        setShowMinimap(prev => !prev);
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -431,18 +446,41 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
         life: 30,
         maxLife: 30,
         size: Math.random() * 3 + 2,
-        color: dustColors[Math.floor(Math.random() * dustColors.length)]
+        color: dustColors[Math.floor(Math.random() * dustColors.length)],
+        type: 'dust'
       });
       lastParticleTimeRef.current = now;
     }
 
+    // === Partículas Ambiente (sparkles sutis) ===
+    if (now - lastAmbientParticleRef.current > 500 && Math.random() < 0.3) {
+      // Gera sparkle perto do player
+      const sparkleColors = ['#22d3ee', '#a5f3fc', '#ffffff', '#fbbf24'];
+      particlesRef.current.push({
+        x: p.x + TILE_SIZE / 2 + (Math.random() - 0.5) * 200,
+        y: p.y + TILE_SIZE / 2 + (Math.random() - 0.5) * 150,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: -Math.random() * 0.3 - 0.1,
+        life: 60,
+        maxLife: 60,
+        size: Math.random() * 2 + 1,
+        color: sparkleColors[Math.floor(Math.random() * sparkleColors.length)],
+        type: 'sparkle'
+      });
+      lastAmbientParticleRef.current = now;
+    }
+
     // Atualiza partículas
-    particlesRef.current = particlesRef.current.filter(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.02; // gravidade leve
-      p.life--;
-      return p.life > 0;
+    particlesRef.current = particlesRef.current.filter(particle => {
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      if (particle.type === 'dust') {
+        particle.vy += 0.02; // gravidade leve para poeira
+      } else if (particle.type === 'sparkle') {
+        particle.vy -= 0.01; // sparkles flutuam pra cima
+      }
+      particle.life--;
+      return particle.life > 0;
     });
 
     // === NPC Chatter Ambiental ===
@@ -498,7 +536,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     }
 
     // 2. TENTAR USAR SPRITE DO LIMEZU
-    if (tilesetsLoadedRef.current && tile !== TileType.FLOOR && tile !== TileType.FLOOR_OR) {
+    if (tilesetsLoadedRef.current) {
       ctx.imageSmoothingEnabled = false;
       const spriteDrawn = tilesetManager.drawTile(ctx, tile, x, y, 1);
       if (spriteDrawn) {
@@ -2638,11 +2676,48 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
   const drawParticles = (ctx: CanvasRenderingContext2D) => {
     particlesRef.current.forEach(particle => {
       const alpha = particle.life / particle.maxLife;
-      ctx.fillStyle = particle.color;
-      ctx.globalAlpha = alpha * 0.6;
-      ctx.beginPath();
-      ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
-      ctx.fill();
+
+      if (particle.type === 'dust') {
+        // Poeira - círculo simples com fade
+        ctx.fillStyle = particle.color;
+        ctx.globalAlpha = alpha * 0.6;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (particle.type === 'sparkle') {
+        // Sparkle - brilho com glow
+        ctx.save();
+        ctx.globalAlpha = alpha * 0.8;
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = particle.color;
+        ctx.fillStyle = particle.color;
+
+        // Desenha estrela de 4 pontas
+        const size = particle.size * (0.5 + alpha * 0.5);
+        ctx.beginPath();
+        ctx.moveTo(particle.x, particle.y - size * 2);
+        ctx.lineTo(particle.x + size * 0.5, particle.y);
+        ctx.lineTo(particle.x, particle.y + size * 2);
+        ctx.lineTo(particle.x - size * 0.5, particle.y);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(particle.x - size * 2, particle.y);
+        ctx.lineTo(particle.x, particle.y + size * 0.5);
+        ctx.lineTo(particle.x + size * 2, particle.y);
+        ctx.lineTo(particle.x, particle.y - size * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      } else {
+        // Default
+        ctx.fillStyle = particle.color;
+        ctx.globalAlpha = alpha * 0.5;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
     });
     ctx.globalAlpha = 1;
   };
@@ -2689,15 +2764,22 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Camera
-    const camX = Math.max(0, Math.min(
+    // Camera alvo (onde deveria estar)
+    cameraTargetRef.current.x = Math.max(0, Math.min(
       playerRef.current.x - canvas.width / 2,
       MAP_WIDTH * TILE_SIZE - canvas.width
     ));
-    const camY = Math.max(0, Math.min(
+    cameraTargetRef.current.y = Math.max(0, Math.min(
       playerRef.current.y - canvas.height / 2,
       MAP_HEIGHT * TILE_SIZE - canvas.height
     ));
+
+    // Interpolação suave da câmera
+    cameraRef.current.x += (cameraTargetRef.current.x - cameraRef.current.x) * CAMERA_LERP;
+    cameraRef.current.y += (cameraTargetRef.current.y - cameraRef.current.y) * CAMERA_LERP;
+
+    const camX = cameraRef.current.x;
+    const camY = cameraRef.current.y;
 
     // Clear
     ctx.fillStyle = '#0f172a';
@@ -2750,11 +2832,35 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
       });
     }
 
-    // Indicador de interação
+    // Indicador de interação com highlight pulsante
     if (nearestNpc && nearestDist < INTERACTION_DISTANCE + 4 && !isDialogueOpen) {
       const px = nearestNpc.x + TILE_SIZE / 2;
       const py = nearestNpc.y - 8;
 
+      // Círculo de highlight pulsante ao redor do NPC
+      const pulse = Math.sin(frameCountRef.current * 0.1) * 0.3 + 0.7;
+      ctx.save();
+      ctx.globalAlpha = pulse * 0.3;
+      ctx.strokeStyle = '#22d3ee';
+      ctx.lineWidth = 3;
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#22d3ee';
+      ctx.beginPath();
+      ctx.arc(px, nearestNpc.y + TILE_SIZE / 2, TILE_SIZE * 0.7 + pulse * 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // Seta indicando o NPC (bouncing)
+      const bounce = Math.sin(frameCountRef.current * 0.15) * 3;
+      ctx.fillStyle = '#22d3ee';
+      ctx.beginPath();
+      ctx.moveTo(px, py - 30 + bounce);
+      ctx.lineTo(px - 6, py - 38 + bounce);
+      ctx.lineTo(px + 6, py - 38 + bounce);
+      ctx.closePath();
+      ctx.fill();
+
+      // Box com instrução
       ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
       ctx.strokeStyle = '#22d3ee';
       ctx.lineWidth = 2;
@@ -2762,7 +2868,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
       const w = 72;
       const h = 22;
       ctx.beginPath();
-      ctx.roundRect(px - w / 2, py - h, w, h, 4);
+      ctx.roundRect(px - w / 2, py - h - 20, w, h, 4);
       ctx.fill();
       ctx.stroke();
 
@@ -2770,7 +2876,12 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
       ctx.font = '8px "Press Start 2P", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
-      ctx.fillText('SPACE', px, py - 6);
+      ctx.fillText('SPACE', px, py - 26);
+
+      // Nome do NPC
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = '7px "Press Start 2P", monospace';
+      ctx.fillText(nearestNpc.name.split(' ')[0].toUpperCase(), px, py - 42);
     }
 
     // Partículas de poeira
@@ -2790,17 +2901,130 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
 
     ctx.restore();
 
+    // === ILUMINAÇÃO POR ZONA ===
+    // Detecta zona baseada na posição do player
+    const playerTileX = Math.floor(playerRef.current.x / TILE_SIZE);
+    const playerTileY = Math.floor(playerRef.current.y / TILE_SIZE);
+    const currentTile = INITIAL_MAP[playerTileY]?.[playerTileX];
+
+    // Determina cor de iluminação baseada na zona
+    let ambientColor = 'rgba(15, 23, 42, 0.35)'; // Normal
+    let ambientTint = 'rgba(0, 0, 0, 0)';
+
+    // Centro Cirúrgico - luz azul fria
+    if (currentTile === TileType.FLOOR_OR || (playerTileY < 15 && playerTileX < 20)) {
+      ambientTint = 'rgba(34, 211, 238, 0.08)';
+      ambientColor = 'rgba(8, 47, 73, 0.25)';
+    }
+    // UTI - luz mais quente
+    else if (playerTileY > 28 && playerTileY < 45 && playerTileX < 20) {
+      ambientTint = 'rgba(251, 191, 36, 0.05)';
+      ambientColor = 'rgba(30, 30, 20, 0.25)';
+    }
+    // Sala de espera - luz aconchegante
+    else if (playerTileX > 40 && playerTileY > 45) {
+      ambientTint = 'rgba(254, 215, 170, 0.06)';
+    }
+
+    // Aplica tint de zona
+    ctx.fillStyle = ambientTint;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     // Vinheta
     const gradient = ctx.createRadialGradient(
       canvas.width / 2, canvas.height / 2, canvas.height / 3,
       canvas.width / 2, canvas.height / 2, canvas.height
     );
     gradient.addColorStop(0, 'rgba(0,0,0,0)');
-    gradient.addColorStop(1, 'rgba(15,23,42,0.35)');
+    gradient.addColorStop(1, ambientColor);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  }, [isDialogueOpen]);
+    // === MINI-MAPA ===
+    if (showMinimap) {
+      const mmWidth = 140;
+      const mmHeight = 100;
+      const mmX = canvas.width - mmWidth - 16;
+      const mmY = 16;
+      const mmScale = Math.min(mmWidth / (MAP_WIDTH * TILE_SIZE), mmHeight / (MAP_HEIGHT * TILE_SIZE));
+
+      // Fundo do minimapa
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.strokeStyle = '#22d3ee';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(mmX - 4, mmY - 4, mmWidth + 8, mmHeight + 8, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      // Título
+      ctx.fillStyle = '#22d3ee';
+      ctx.font = '7px "Press Start 2P", monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('MAP', mmX, mmY - 8);
+
+      // Desenha tiles simplificados
+      for (let ty = 0; ty < MAP_HEIGHT; ty++) {
+        for (let tx = 0; tx < MAP_WIDTH; tx++) {
+          const tile = INITIAL_MAP[ty][tx];
+          let color = '#1e293b'; // floor
+
+          if (tile === TileType.WALL) color = '#475569';
+          else if (tile === TileType.DOOR) color = '#f59e0b';
+          else if (tile === TileType.FLOOR_OR) color = '#0ea5e9';
+          else if ([TileType.BED, TileType.OR_TABLE].includes(tile)) color = '#3b82f6';
+          else if ([TileType.ANESTHESIA_MACHINE, TileType.PATIENT_MONITOR].includes(tile)) color = '#22c55e';
+
+          ctx.fillStyle = color;
+          ctx.fillRect(
+            mmX + tx * TILE_SIZE * mmScale,
+            mmY + ty * TILE_SIZE * mmScale,
+            Math.max(1, TILE_SIZE * mmScale),
+            Math.max(1, TILE_SIZE * mmScale)
+          );
+        }
+      }
+
+      // NPCs no minimapa
+      ctx.fillStyle = '#f472b6';
+      npcsRef.current.forEach(npc => {
+        ctx.beginPath();
+        ctx.arc(
+          mmX + (npc.x + TILE_SIZE / 2) * mmScale,
+          mmY + (npc.y + TILE_SIZE / 2) * mmScale,
+          2, 0, Math.PI * 2
+        );
+        ctx.fill();
+      });
+
+      // Player no minimapa (pulsante)
+      const pulse = Math.sin(frameCountRef.current * 0.15) * 0.3 + 0.7;
+      ctx.fillStyle = `rgba(34, 211, 238, ${pulse})`;
+      ctx.beginPath();
+      ctx.arc(
+        mmX + (playerRef.current.x + TILE_SIZE / 2) * mmScale,
+        mmY + (playerRef.current.y + TILE_SIZE / 2) * mmScale,
+        3 + pulse, 0, Math.PI * 2
+      );
+      ctx.fill();
+
+      // Borda do player
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Viewport atual no minimapa
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(
+        mmX + camX * mmScale,
+        mmY + camY * mmScale,
+        canvas.width * mmScale,
+        canvas.height * mmScale
+      );
+    }
+
+  }, [isDialogueOpen, showMinimap]);
 
   // Game loop
   const tick = useCallback(() => {

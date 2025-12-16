@@ -4,7 +4,7 @@
  */
 import React, { useState, useRef, useEffect } from 'react';
 import { TileType } from '../types';
-import { SPRITE_SHEETS, TILE_SPRITES, SpriteMapping } from '../services/tilesetManager';
+import { SPRITE_SHEETS, TILE_SPRITES, SpriteMapping, tilesetManager } from '../services/tilesetManager';
 
 interface TilePickerProps {
   onClose: () => void;
@@ -13,10 +13,17 @@ interface TilePickerProps {
 
 // Lista de TileTypes disponíveis para mapear
 const MAPPABLE_TILES: { type: TileType; name: string; category: string }[] = [
+  // Estrutura
+  { type: TileType.WALL, name: 'Parede', category: 'Estrutura' },
+  { type: TileType.DOOR, name: 'Porta', category: 'Estrutura' },
+  { type: TileType.FLOOR, name: 'Piso Normal', category: 'Estrutura' },
+  { type: TileType.FLOOR_OR, name: 'Piso Centro Cirúrgico', category: 'Estrutura' },
+
   // Mobiliário Hospital
   { type: TileType.BED, name: 'Cama', category: 'Hospital' },
   { type: TileType.OR_TABLE, name: 'Mesa Cirúrgica', category: 'Hospital' },
   { type: TileType.DELIVERY_BED, name: 'Cama Parto', category: 'Hospital' },
+  { type: TileType.STRETCHER, name: 'Maca', category: 'Hospital' },
 
   // Monitores
   { type: TileType.PATIENT_MONITOR, name: 'Monitor Paciente', category: 'Monitores' },
@@ -31,23 +38,30 @@ const MAPPABLE_TILES: { type: TileType; name: string; category: string }[] = [
   { type: TileType.DRUG_CART, name: 'Carrinho Drogas', category: 'Anestesia' },
   { type: TileType.CRASH_CART, name: 'Crash Cart', category: 'Anestesia' },
   { type: TileType.INTUBATION_CART, name: 'Carrinho Intubação', category: 'Anestesia' },
+  { type: TileType.OXYGEN_TANK, name: 'Cilindro O2', category: 'Anestesia' },
+  { type: TileType.SYRINGE_PUMP, name: 'Bomba Seringa', category: 'Anestesia' },
 
   // Equipamentos Cirúrgicos
   { type: TileType.INSTRUMENT_TABLE, name: 'Mesa Instrumentos', category: 'Cirurgia' },
   { type: TileType.BACK_TABLE, name: 'Mesa Apoio', category: 'Cirurgia' },
+  { type: TileType.MAYO_STAND, name: 'Mesa Mayo', category: 'Cirurgia' },
   { type: TileType.C_ARM, name: 'Arco em C', category: 'Cirurgia' },
   { type: TileType.SURGICAL_MICROSCOPE, name: 'Microscópio', category: 'Cirurgia' },
   { type: TileType.ELECTROSURGICAL_UNIT, name: 'Bisturi Elétrico', category: 'Cirurgia' },
   { type: TileType.LAPAROSCOPY_TOWER, name: 'Torre Laparo', category: 'Cirurgia' },
+  { type: TileType.SURGICAL_LIGHT, name: 'Foco Cirúrgico', category: 'Cirurgia' },
+  { type: TileType.SUCTION_MACHINE, name: 'Aspirador', category: 'Cirurgia' },
 
   // Diagnóstico
   { type: TileType.MRI_MACHINE, name: 'Ressonância', category: 'Diagnóstico' },
   { type: TileType.ULTRASOUND, name: 'Ultrassom', category: 'Diagnóstico' },
 
-  // Especialidades
+  // Especialidades Cardíaca
   { type: TileType.CEC_MACHINE, name: 'Máquina CEC', category: 'Cardíaca' },
   { type: TileType.IABP, name: 'Balão Intra-Aórtico', category: 'Cardíaca' },
   { type: TileType.CELL_SAVER, name: 'Cell Saver', category: 'Cardíaca' },
+
+  // Neonatal
   { type: TileType.INFANT_WARMER, name: 'Berço Aquecido', category: 'Neonatal' },
   { type: TileType.WARMER, name: 'Aquecedor', category: 'Neonatal' },
 
@@ -219,11 +233,14 @@ const TilePicker: React.FC<TilePickerProps> = ({ onClose, onMappingChange }) => 
     setMappings(newMappings);
     localStorage.setItem('tilePicker_mappings', JSON.stringify(newMappings));
 
+    // Atualiza tilesetManager imediatamente para refletir no jogo
+    tilesetManager.updateMappings(newMappings as Partial<Record<TileType, SpriteMapping>>);
+
     if (onMappingChange) {
       onMappingChange(newMappings);
     }
 
-    alert(`Mapeado: ${MAPPABLE_TILES.find(t => t.type === selectedTileType)?.name} → (${selectedTile.x}, ${selectedTile.y})`);
+    console.log(`TilePicker: Mapeado ${MAPPABLE_TILES.find(t => t.type === selectedTileType)?.name} → ${selectedSheet}(${selectedTile.x}, ${selectedTile.y})`);
   };
 
   const exportMappings = () => {

@@ -151,10 +151,11 @@ const App: React.FC = () => {
         <div className="absolute top-4 left-4 pointer-events-none flex flex-col gap-3">
           <div className="bg-slate-900/70 text-white px-3 py-2 rounded-lg font-retro text-[10px] border border-cyan-400/40 shadow-[0_8px_30px_rgba(6,182,212,0.2)] backdrop-blur">
             <h1 className="text-amber-300 mb-2 text-xs tracking-tight">MEDIQUEST</h1>
-            <div className="flex gap-3 flex-wrap text-[10px] leading-relaxed">
-              <span className="bg-white/10 px-2 py-1 rounded border border-white/10">WASD / Setas mover</span>
-              <span className="bg-white/10 px-2 py-1 rounded border border-white/10">SPACE / ENTER falar</span>
+            <div className="flex gap-2 flex-wrap text-[9px] leading-relaxed">
+              <span className="bg-white/10 px-2 py-1 rounded border border-white/10">WASD mover</span>
+              <span className="bg-white/10 px-2 py-1 rounded border border-white/10">SPACE falar</span>
               <span className="bg-white/10 px-2 py-1 rounded border border-white/10">[I] Inventario</span>
+              <span className="bg-white/10 px-2 py-1 rounded border border-white/10">[M] Mapa</span>
             </div>
           </div>
 

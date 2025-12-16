@@ -33,20 +33,84 @@ export interface SpriteMapping {
 // NOTA: Mapeamentos verificados visualmente - adicionar mais conforme teste
 
 export const TILE_SPRITES: Partial<Record<TileType, SpriteMapping>> = {
-  // === HOSPITAL - Camas (verificado) ===
-  [TileType.BED]: { sheet: 'hospital', x: 0, y: 0 },
+  // === HOSPITAL 32x32 (512x3520 = 16 cols x 110 rows) ===
+  // Mapeamentos revisados baseados em análise visual do sprite sheet
 
-  // === INTERIORS - Cadeiras (funcionando!) ===
-  [TileType.CHAIR_WAITING]: { sheet: 'interiors', x: 20, y: 30 },
+  // --- CAMAS (topo do sprite sheet) ---
+  [TileType.BED]: { sheet: 'hospital', x: 1, y: 1 }, // Cama hospital azul
+  [TileType.OR_TABLE]: { sheet: 'hospital', x: 1, y: 9 }, // Mesa cirúrgica
+  [TileType.DELIVERY_BED]: { sheet: 'hospital', x: 9, y: 9 }, // Cama parto
+  [TileType.STRETCHER]: { sheet: 'hospital', x: 1, y: 5 }, // Maca/stretcher
 
-  // TODO: Adicionar mais mapeamentos conforme identificamos no sprite sheet
-  // Por enquanto, deixar os outros tiles usarem o fallback canvas
+  // --- MONITORES E EQUIPAMENTOS ELETRÔNICOS ---
+  [TileType.PATIENT_MONITOR]: { sheet: 'hospital', x: 1, y: 25 }, // Monitor
+  [TileType.BIS_MONITOR]: { sheet: 'hospital', x: 3, y: 25 }, // Monitor BIS
+  [TileType.FETAL_MONITOR]: { sheet: 'hospital', x: 5, y: 25 }, // Monitor fetal
+
+  // --- EQUIPAMENTOS ANESTESIA ---
+  [TileType.ANESTHESIA_MACHINE]: { sheet: 'hospital', x: 1, y: 29 }, // Máquina anestesia
+  [TileType.VENTILATOR]: { sheet: 'hospital', x: 5, y: 29 }, // Ventilador
+  [TileType.DEFIBRILLATOR]: { sheet: 'hospital', x: 9, y: 29 }, // Desfibrilador
+  [TileType.IV_STAND]: { sheet: 'hospital', x: 1, y: 33 }, // Suporte soro
+  [TileType.DRUG_CART]: { sheet: 'hospital', x: 1, y: 17 }, // Carrinho medicamentos
+  [TileType.CRASH_CART]: { sheet: 'hospital', x: 5, y: 17 }, // Crash cart
+  [TileType.INTUBATION_CART]: { sheet: 'hospital', x: 9, y: 17 }, // Carrinho intubação
+  [TileType.OXYGEN_TANK]: { sheet: 'hospital', x: 13, y: 33 }, // Cilindro O2
+  [TileType.SYRINGE_PUMP]: { sheet: 'hospital', x: 3, y: 33 }, // Bomba seringa
+
+  // --- EQUIPAMENTOS CIRÚRGICOS ---
+  [TileType.INSTRUMENT_TABLE]: { sheet: 'hospital', x: 1, y: 37 }, // Mesa instrumentos
+  [TileType.BACK_TABLE]: { sheet: 'hospital', x: 5, y: 37 }, // Mesa apoio
+  [TileType.MAYO_STAND]: { sheet: 'hospital', x: 9, y: 37 }, // Mesa Mayo
+  [TileType.SURGICAL_LIGHT]: { sheet: 'hospital', x: 13, y: 37 }, // Foco cirúrgico
+  [TileType.SUCTION_MACHINE]: { sheet: 'hospital', x: 1, y: 41 }, // Aspirador
+
+  // --- DIAGNÓSTICO ---
+  [TileType.MRI_MACHINE]: { sheet: 'hospital', x: 1, y: 13 }, // Ressonância (grande)
+  [TileType.ULTRASOUND]: { sheet: 'hospital', x: 9, y: 41 }, // Ultrassom
+  [TileType.C_ARM]: { sheet: 'hospital', x: 5, y: 13 }, // Arco em C
+
+  // --- ESPECIALIDADES ---
+  [TileType.CEC_MACHINE]: { sheet: 'hospital', x: 1, y: 45 }, // Máquina CEC
+  [TileType.IABP]: { sheet: 'hospital', x: 5, y: 45 }, // Balão intra-aórtico
+  [TileType.CELL_SAVER]: { sheet: 'hospital', x: 9, y: 45 }, // Cell saver
+  [TileType.INFANT_WARMER]: { sheet: 'hospital', x: 1, y: 49 }, // Berço aquecido
+  [TileType.WARMER]: { sheet: 'hospital', x: 5, y: 49 }, // Aquecedor
+
+  // --- MOBÍLIA ---
+  [TileType.CABINET]: { sheet: 'hospital', x: 1, y: 21 }, // Armário
+  [TileType.LOCKERS]: { sheet: 'hospital', x: 5, y: 21 }, // Lockers
+  [TileType.REFRIGERATOR]: { sheet: 'hospital', x: 9, y: 21 }, // Geladeira
+  [TileType.SINK]: { sheet: 'hospital', x: 1, y: 53 }, // Pia
+  [TileType.DESK_RECEPTION]: { sheet: 'hospital', x: 1, y: 57 }, // Balcão recepção
+  [TileType.COMPUTER_DESK]: { sheet: 'hospital', x: 5, y: 57 }, // Mesa computador
+  [TileType.SOFA]: { sheet: 'hospital', x: 9, y: 57 }, // Sofá
+  [TileType.DINING_TABLE]: { sheet: 'hospital', x: 13, y: 57 }, // Mesa
+
+  // --- CADEIRAS ---
+  [TileType.CHAIR_WAITING]: { sheet: 'hospital', x: 1, y: 61 }, // Cadeira espera
+  [TileType.WHEELCHAIR]: { sheet: 'hospital', x: 5, y: 61 }, // Cadeira de rodas
+
+  // --- DECORAÇÃO ---
+  [TileType.PLANT]: { sheet: 'hospital', x: 1, y: 65 }, // Planta
+  [TileType.VENDING_MACHINE]: { sheet: 'hospital', x: 5, y: 65 }, // Máquina vendas
+
+  // --- ESTRUTURA (do Room_Builder - 76 cols x 113 rows) ---
+  // DESABILITADO - usando fallback canvas por enquanto para paredes
+  // [TileType.WALL]: { sheet: 'roomBuilder', x: 57, y: 4 },
+  // [TileType.DOOR]: { sheet: 'roomBuilder', x: 46, y: 80 },
+
+  // --- PISOS - DESABILITADO temporariamente ---
+  // Usando fallback canvas até encontrar coordenadas corretas
+  // [TileType.FLOOR]: { sheet: 'roomBuilder', x: 19, y: 43 },
+  // [TileType.FLOOR_OR]: { sheet: 'roomBuilder', x: 4, y: 6 },
 };
 
 // Classe para gerenciar carregamento e renderização de sprites
 class TilesetManager {
   private images: Map<string, HTMLImageElement> = new Map();
   private loadPromises: Map<string, Promise<HTMLImageElement>> = new Map();
+  private customMappings: Partial<Record<TileType, SpriteMapping>> = {};
   public isLoaded = false;
 
   // Carrega todos os sprite sheets
@@ -55,8 +119,27 @@ class TilesetManager {
       this.loadImage(key, path)
     );
     await Promise.all(promises);
+    this.loadCustomMappings();
     this.isLoaded = true;
     console.log('TilesetManager: Todos os sprite sheets carregados!');
+  }
+
+  // Carrega mapeamentos customizados do localStorage (salvos pelo TilePicker)
+  loadCustomMappings(): void {
+    try {
+      const saved = localStorage.getItem('tilePicker_mappings');
+      if (saved) {
+        this.customMappings = JSON.parse(saved);
+        console.log(`TilesetManager: ${Object.keys(this.customMappings).length} mapeamentos customizados carregados`);
+      }
+    } catch (e) {
+      console.warn('TilesetManager: Erro ao carregar mapeamentos customizados', e);
+    }
+  }
+
+  // Atualiza mapeamentos (chamado pelo TilePicker)
+  updateMappings(mappings: Partial<Record<TileType, SpriteMapping>>): void {
+    this.customMappings = { ...this.customMappings, ...mappings };
   }
 
   // Carrega uma imagem
@@ -96,7 +179,8 @@ class TilesetManager {
     destY: number,
     scale: number = 1
   ): boolean {
-    const mapping = TILE_SPRITES[tileType];
+    // Prioridade: customMappings (TilePicker) > TILE_SPRITES (hardcoded)
+    const mapping = this.customMappings[tileType] || TILE_SPRITES[tileType];
     if (!mapping) return false;
 
     const img = this.images.get(mapping.sheet);
@@ -115,7 +199,7 @@ class TilesetManager {
 
   // Verifica se um tile tem sprite mapeado
   hasSprite(tileType: TileType): boolean {
-    return TILE_SPRITES[tileType] !== undefined;
+    return this.customMappings[tileType] !== undefined || TILE_SPRITES[tileType] !== undefined;
   }
 }
 
