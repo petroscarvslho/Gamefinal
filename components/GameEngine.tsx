@@ -7,6 +7,7 @@ import { tilesetManager } from '../services/tilesetManager';
 interface GameEngineProps {
   onInteract: (npc: NPC) => void;
   isDialogueOpen: boolean;
+  buildMode?: boolean;
 }
 
 // Mapeamento de personagens para sprites pré-feitos LimeZu
@@ -30,7 +31,7 @@ const COLORS = {
   plant: { pot: '#b45309', leaf: '#22a055', leafLight: '#4ade80' },
 };
 
-const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) => {
+const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen, buildMode = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const minimapCanvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
@@ -43,6 +44,10 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
 
   // Estado do minimap
   const [showMinimap, setShowMinimap] = useState(true);
+
+  // Build mode state
+  const [selectedBuildTile, setSelectedBuildTile] = useState<TileType>(TileType.FLOOR);
+  const mapRef = useRef<TileType[][]>(INITIAL_MAP.map(row => [...row]));
 
   // Sprite images - personagens e tilesets
   const characterImagesRef = useRef<Record<string, HTMLImageElement>>({});
@@ -398,7 +403,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     for (const corner of corners) {
       const tx = Math.floor(corner.cx / TILE_SIZE);
       const ty = Math.floor(corner.cy / TILE_SIZE);
-      const tile = INITIAL_MAP[ty]?.[tx];
+      const tile = mapRef.current[ty]?.[tx];
       if (tile === undefined || isSolid(tile)) return false;
     }
     return true;
@@ -514,7 +519,16 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     const ty = Math.floor(y / S);
     const isAlt = (tx + ty) % 2 === 0;
 
-    // 1. PISO BASE (sempre desenha primeiro)
+    // 1. PRIMEIRO TENTAR USAR SPRITE DO LIMEZU
+    if (tilesetsLoadedRef.current) {
+      ctx.imageSmoothingEnabled = false;
+      const spriteDrawn = tilesetManager.drawTile(ctx, tile, x, y, 1);
+      if (spriteDrawn) {
+        return; // Sprite desenhado com sucesso!
+      }
+    }
+
+    // 2. FALLBACK - PISO BASE (canvas)
     if (tile !== TileType.WALL) {
       const isOR = tile === TileType.FLOOR_OR;
       const isWaiting = tx > 18 && ty > 12;
@@ -533,15 +547,6 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
       ctx.fillStyle = isOR ? '#a8d8ea' : isWaiting ? '#d8d0c0' : '#c8c4b8';
       ctx.fillRect(x, y + S - 1, S, 1);
       ctx.fillRect(x + S - 1, y, 1, S);
-    }
-
-    // 2. TENTAR USAR SPRITE DO LIMEZU
-    if (tilesetsLoadedRef.current) {
-      ctx.imageSmoothingEnabled = false;
-      const spriteDrawn = tilesetManager.drawTile(ctx, tile, x, y, 1);
-      if (spriteDrawn) {
-        return; // Sprite desenhado com sucesso, não precisa do fallback
-      }
     }
 
     // 3. FALLBACK - DESENHO CANVAS (caso sprite não disponível)
@@ -2800,7 +2805,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     for (let y = 0; y < MAP_HEIGHT; y++) {
       // Desenha tiles desta linha
       for (let x = 0; x < MAP_WIDTH; x++) {
-        const tile = INITIAL_MAP[y][x];
+        const tile = mapRef.current[y][x];
         drawTile(ctx, tile, x * TILE_SIZE, y * TILE_SIZE);
         // Efeito de luz pulsante em equipamentos
         drawEquipmentGlow(ctx, x * TILE_SIZE, y * TILE_SIZE, tile);
@@ -2905,7 +2910,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     // Detecta zona baseada na posição do player
     const playerTileX = Math.floor(playerRef.current.x / TILE_SIZE);
     const playerTileY = Math.floor(playerRef.current.y / TILE_SIZE);
-    const currentTile = INITIAL_MAP[playerTileY]?.[playerTileX];
+    const currentTile = mapRef.current[playerTileY]?.[playerTileX];
 
     // Determina cor de iluminação baseada na zona
     let ambientColor = 'rgba(15, 23, 42, 0.35)'; // Normal
@@ -2966,7 +2971,7 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
       // Desenha tiles simplificados
       for (let ty = 0; ty < MAP_HEIGHT; ty++) {
         for (let tx = 0; tx < MAP_WIDTH; tx++) {
-          const tile = INITIAL_MAP[ty][tx];
+          const tile = mapRef.current[ty][tx];
           let color = '#1e293b'; // floor
 
           if (tile === TileType.WALL) color = '#475569';
@@ -3053,7 +3058,68 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  return <canvas ref={canvasRef} className="block w-full h-full bg-slate-950" />;
+  // Build mode click handler
+  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!buildMode || !canvasRef.current) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left + cameraRef.current.x;
+    const clickY = e.clientY - rect.top + cameraRef.current.y;
+
+    const tileX = Math.floor(clickX / TILE_SIZE);
+    const tileY = Math.floor(clickY / TILE_SIZE);
+
+    if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
+      mapRef.current[tileY][tileX] = selectedBuildTile;
+    }
+  }, [buildMode, selectedBuildTile]);
+
+  // Build mode tile options
+  const buildTiles = [
+    { type: TileType.FLOOR, label: 'Piso', color: '#e8e4d9' },
+    { type: TileType.WALL, label: 'Parede', color: '#a8a498' },
+    { type: TileType.FLOOR_OR, label: 'Centro Cir.', color: '#d4eaf7' },
+    { type: TileType.DOOR, label: 'Porta', color: '#b8885c' },
+  ];
+
+  return (
+    <div className="relative w-full h-full">
+      <canvas
+        ref={canvasRef}
+        className={`block w-full h-full bg-slate-950 ${buildMode ? 'cursor-crosshair' : ''}`}
+        onClick={handleCanvasClick}
+      />
+
+      {/* Build Mode UI */}
+      {buildMode && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-800/95 px-4 py-3 rounded-lg border border-orange-500/50 shadow-xl">
+          <div className="text-orange-400 text-xs font-bold mb-2 text-center" style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '8px' }}>
+            🔨 MODO CONSTRUÇÃO
+          </div>
+          <div className="flex gap-2">
+            {buildTiles.map(tile => (
+              <button
+                key={tile.type}
+                onClick={() => setSelectedBuildTile(tile.type)}
+                className={`px-3 py-2 rounded text-xs ${selectedBuildTile === tile.type ? 'ring-2 ring-orange-400' : ''}`}
+                style={{
+                  backgroundColor: tile.color,
+                  fontFamily: '"Press Start 2P", monospace',
+                  fontSize: '7px',
+                  color: tile.type === TileType.WALL ? '#fff' : '#333'
+                }}
+              >
+                {tile.label}
+              </button>
+            ))}
+          </div>
+          <div className="text-slate-400 text-center mt-2" style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '6px' }}>
+            Clique no mapa para construir
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default GameEngine;

@@ -1,54 +1,104 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LimeZu Hospital Tile Preview</title>
+  <title>LimeZu Tile Preview - MediQuest</title>
   <style>
+    * { box-sizing: border-box; }
     body {
-      background: #1e293b;
+      background: #0f172a;
       color: white;
-      font-family: monospace;
-      padding: 20px;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 10px;
     }
-    h1 { color: #22d3ee; }
-    .controls {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: #0f172a;
-      padding: 15px;
+    h1 {
+      color: #22d3ee;
+      margin: 0 0 10px 0;
+      font-size: 20px;
+    }
+
+    .container {
+      display: flex;
+      gap: 10px;
+      height: calc(100vh - 50px);
+    }
+
+    /* Painel esquerdo - Sprite Sheet */
+    .sprite-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #1e293b;
       border-radius: 8px;
-      border: 1px solid #22d3ee;
-      z-index: 100;
+      padding: 10px;
+      overflow: hidden;
     }
-    .controls select, .controls input {
-      margin: 5px;
-      padding: 5px;
+
+    .sheet-tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(16, 64px);
-      gap: 2px;
-      margin-top: 20px;
-    }
-    .tile {
-      width: 64px;
-      height: 64px;
-      background: #0f172a;
-      border: 1px solid #334155;
-      position: relative;
+
+    .sheet-tab {
+      padding: 8px 12px;
+      background: #334155;
+      border: none;
+      border-radius: 5px;
+      color: #94a3b8;
       cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .sheet-tab:hover { background: #475569; }
+    .sheet-tab.active {
+      background: #0891b2;
+      color: white;
+    }
+
+    .sprite-container {
+      flex: 1;
+      overflow: auto;
+      background: #0f172a;
+      border-radius: 5px;
+      padding: 10px;
+    }
+
+    .sprite-grid {
+      display: grid;
+      gap: 2px;
+    }
+
+    .tile {
+      width: 48px;
+      height: 48px;
+      background: #1e293b;
+      border: 2px solid transparent;
+      cursor: pointer;
+      position: relative;
       image-rendering: pixelated;
     }
+
     .tile:hover {
       border-color: #22d3ee;
-      box-shadow: 0 0 10px #22d3ee;
+      z-index: 10;
+      transform: scale(1.1);
     }
-    .tile img {
-      width: 64px;
-      height: 64px;
+
+    .tile.selected {
+      border-color: #22c55e;
+      box-shadow: 0 0 10px #22c55e;
+    }
+
+    .tile canvas {
+      width: 100%;
+      height: 100%;
       image-rendering: pixelated;
     }
-    .tile .coords {
+
+    .tile .coord {
       position: absolute;
       bottom: 0;
       left: 0;
@@ -57,140 +107,319 @@
       font-size: 8px;
       text-align: center;
       color: #fbbf24;
+      padding: 1px;
     }
-    .tile.selected {
-      border: 3px solid #22c55e;
-    }
-    .selected-info {
-      margin-top: 10px;
-      padding: 10px;
+
+    /* Painel direito - Info e Preview */
+    .info-panel {
+      width: 300px;
       background: #1e293b;
-      border-radius: 4px;
+      border-radius: 8px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
     }
-    .row-label {
-      grid-column: 1 / -1;
-      background: #334155;
-      padding: 5px;
+
+    .info-section {
+      background: #0f172a;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .info-section h3 {
+      color: #22d3ee;
+      margin: 0 0 10px 0;
+      font-size: 14px;
+    }
+
+    .preview-canvas {
+      width: 128px;
+      height: 128px;
+      margin: 0 auto;
+      display: block;
+      background: #1e293b;
+      border: 3px solid #22d3ee;
+      image-rendering: pixelated;
+    }
+
+    .coord-display {
+      text-align: center;
       margin-top: 10px;
-      font-weight: bold;
-      color: #fbbf24;
+      font-family: monospace;
+      font-size: 18px;
+      color: #22c55e;
     }
+
+    .sheet-info {
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    .code-output {
+      background: #0f172a;
+      padding: 10px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #fbbf24;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      width: 100%;
+      padding: 10px;
+      background: #7c3aed;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .copy-btn:hover { background: #8b5cf6; }
+
+    .row-nav {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .row-nav input {
+      width: 60px;
+      padding: 5px;
+      background: #334155;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      color: white;
+    }
+
+    .row-nav button {
+      padding: 5px 10px;
+      background: #334155;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .row-nav button:hover { background: #475569; }
+
+    .zoom-controls {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .zoom-btn {
+      padding: 5px 12px;
+      background: #334155;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .zoom-btn:hover { background: #475569; }
+    .zoom-btn.active { background: #0891b2; }
   </style>
 </head>
 <body>
-  <h1>LimeZu Hospital Sprite Sheet - Tile Preview</h1>
-  <p>Clique em um tile para ver suas coordenadas. Use para mapear no TilePicker.</p>
+  <h1>🏥 LimeZu Tile Preview - MediQuest</h1>
 
-  <div class="controls">
-    <label>Sprite Sheet:</label>
-    <select id="sheetSelect" onchange="loadSheet()">
-      <option value="Hospital_32x32.png">Hospital</option>
-      <option value="Interiors_32x32.png">Interiors</option>
-      <option value="Generic_32x32.png">Generic</option>
-      <option value="Bathroom_32x32.png">Bathroom</option>
-      <option value="Room_Builder_32x32.png">Room Builder</option>
-    </select>
-    <br>
-    <label>Ir para linha:</label>
-    <input type="number" id="gotoRow" min="0" max="110" value="0" onchange="scrollToRow()">
-    <br>
-    <div class="selected-info" id="selectedInfo">
-      Nenhum tile selecionado
+  <div class="container">
+    <!-- Sprite Sheet Panel -->
+    <div class="sprite-panel">
+      <div class="sheet-tabs" id="sheetTabs"></div>
+
+      <div class="row-nav">
+        <span style="color: #94a3b8; font-size: 12px;">Linha:</span>
+        <input type="number" id="rowInput" value="0" min="0">
+        <button onclick="goToRow()">Ir</button>
+        <span style="margin-left: 20px; color: #94a3b8; font-size: 12px;">Zoom:</span>
+        <div class="zoom-controls">
+          <button class="zoom-btn" onclick="setZoom(32)">1x</button>
+          <button class="zoom-btn active" onclick="setZoom(48)">1.5x</button>
+          <button class="zoom-btn" onclick="setZoom(64)">2x</button>
+          <button class="zoom-btn" onclick="setZoom(96)">3x</button>
+        </div>
+      </div>
+
+      <div class="sprite-container" id="spriteContainer">
+        <div class="sprite-grid" id="spriteGrid"></div>
+      </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="info-panel">
+      <div class="info-section">
+        <h3>📍 TILE SELECIONADO</h3>
+        <canvas id="previewCanvas" class="preview-canvas" width="128" height="128"></canvas>
+        <div class="coord-display" id="coordDisplay">Clique em um tile</div>
+      </div>
+
+      <div class="info-section">
+        <h3>📋 SPRITE SHEET</h3>
+        <div class="sheet-info" id="sheetInfo">
+          Selecione um sprite sheet
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3>💻 CÓDIGO</h3>
+        <div class="code-output" id="codeOutput">
+          Selecione um tile para ver o código
+        </div>
+        <button class="copy-btn" onclick="copyCode()">📋 Copiar Código</button>
+      </div>
     </div>
   </div>
 
-  <div class="grid" id="grid"></div>
-
   <script>
-    const TILE_SIZE = 32;
-    let currentSheet = 'Hospital_32x32.png';
-    let img = new Image();
+    const SPRITE_SHEETS = {
+      'floors': { file: 'Room_Builder_Floors_32x32.png', name: '🏥 FLOORS (Pisos)' },
+      'walls': { file: 'Room_Builder_Walls_32x32.png', name: '🧱 WALLS (Paredes)' },
+      'hospital': { file: 'Hospital_32x32.png', name: '🏨 Hospital' },
+      'interiors': { file: 'Interiors_32x32.png', name: '🪑 Interiors' },
+      'generic': { file: 'Generic_32x32.png', name: '📦 Generic' },
+      'bathroom': { file: 'Bathroom_32x32.png', name: '🚿 Bathroom' },
+      'roomBuilder': { file: 'Room_Builder_32x32.png', name: '🏠 Room Builder' },
+    };
 
-    function loadSheet() {
-      currentSheet = document.getElementById('sheetSelect').value;
-      img.src = `/assets/limezu/interiors/${currentSheet}`;
+    let currentSheet = 'floors';
+    let currentImage = null;
+    let selectedTile = null;
+    let tileSize = 48;
+    const TILE_PX = 32;
+
+    // Criar tabs
+    const tabsContainer = document.getElementById('sheetTabs');
+    Object.entries(SPRITE_SHEETS).forEach(([key, sheet]) => {
+      const btn = document.createElement('button');
+      btn.className = 'sheet-tab' + (key === currentSheet ? ' active' : '');
+      btn.textContent = sheet.name;
+      btn.onclick = () => loadSheet(key);
+      tabsContainer.appendChild(btn);
+    });
+
+    function loadSheet(sheetKey) {
+      currentSheet = sheetKey;
+      const sheet = SPRITE_SHEETS[sheetKey];
+
+      // Update tabs
+      document.querySelectorAll('.sheet-tab').forEach((tab, i) => {
+        tab.className = 'sheet-tab' + (Object.keys(SPRITE_SHEETS)[i] === sheetKey ? ' active' : '');
+      });
+
+      const img = new Image();
+      img.onload = () => {
+        currentImage = img;
+        const cols = Math.floor(img.width / TILE_PX);
+        const rows = Math.floor(img.height / TILE_PX);
+
+        document.getElementById('sheetInfo').innerHTML = `
+          <strong>${sheet.name}</strong><br>
+          Arquivo: ${sheet.file}<br>
+          Dimensões: ${img.width}x${img.height}px<br>
+          Grid: ${cols} colunas x ${rows} linhas<br>
+          Total: ${cols * rows} tiles
+        `;
+
+        renderGrid();
+      };
+      img.src = '/assets/limezu/interiors/' + sheet.file;
     }
 
-    img.onload = function() {
-      const cols = Math.floor(img.width / TILE_SIZE);
-      const rows = Math.floor(img.height / TILE_SIZE);
+    function renderGrid() {
+      if (!currentImage) return;
 
-      const grid = document.getElementById('grid');
+      const grid = document.getElementById('spriteGrid');
       grid.innerHTML = '';
 
-      for (let y = 0; y < rows; y++) {
-        // Row label every 10 rows
-        if (y % 10 === 0) {
-          const label = document.createElement('div');
-          label.className = 'row-label';
-          label.textContent = `=== Linhas ${y} - ${Math.min(y + 9, rows - 1)} ===`;
-          label.id = `row-${y}`;
-          grid.appendChild(label);
-        }
+      const cols = Math.floor(currentImage.width / TILE_PX);
+      const rows = Math.floor(currentImage.height / TILE_PX);
 
+      grid.style.gridTemplateColumns = `repeat(${cols}, ${tileSize}px)`;
+
+      for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
           const tile = document.createElement('div');
           tile.className = 'tile';
-          tile.dataset.x = x;
-          tile.dataset.y = y;
+          tile.style.width = tileSize + 'px';
+          tile.style.height = tileSize + 'px';
 
-          // Create canvas for this tile
           const canvas = document.createElement('canvas');
-          canvas.width = 64;
-          canvas.height = 64;
+          canvas.width = TILE_PX;
+          canvas.height = TILE_PX;
           const ctx = canvas.getContext('2d');
           ctx.imageSmoothingEnabled = false;
-          ctx.drawImage(img, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, 0, 0, 64, 64);
+          ctx.drawImage(currentImage, x * TILE_PX, y * TILE_PX, TILE_PX, TILE_PX, 0, 0, TILE_PX, TILE_PX);
+
+          const coord = document.createElement('div');
+          coord.className = 'coord';
+          coord.textContent = `${x},${y}`;
 
           tile.appendChild(canvas);
-
-          const coords = document.createElement('div');
-          coords.className = 'coords';
-          coords.textContent = `${x},${y}`;
-          tile.appendChild(coords);
-
-          tile.onclick = () => selectTile(x, y);
+          tile.appendChild(coord);
+          tile.onclick = () => selectTile(x, y, tile);
 
           grid.appendChild(tile);
         }
       }
-
-      document.getElementById('gotoRow').max = rows;
-    };
-
-    function selectTile(x, y) {
-      // Remove previous selection
-      document.querySelectorAll('.tile.selected').forEach(t => t.classList.remove('selected'));
-
-      // Select current
-      const tile = document.querySelector(`.tile[data-x="${x}"][data-y="${y}"]`);
-      if (tile) tile.classList.add('selected');
-
-      // Update info
-      const info = document.getElementById('selectedInfo');
-      info.innerHTML = `
-        <strong>Tile Selecionado:</strong><br>
-        X: ${x}, Y: ${y}<br>
-        <br>
-        <strong>Para usar no TilePicker:</strong><br>
-        1. Abra o Tile Picker no jogo<br>
-        2. Selecione "${currentSheet.replace('_32x32.png', '')}"<br>
-        3. Navegue até linha ${y}<br>
-        4. Clique no tile na coluna ${x}<br>
-        <br>
-        <strong>Código direto:</strong><br>
-        <code style="color: #22c55e">{ sheet: '${currentSheet.replace('_32x32.png', '').toLowerCase()}', x: ${x}, y: ${y} }</code>
-      `;
     }
 
-    function scrollToRow() {
-      const row = document.getElementById('gotoRow').value;
-      const label = document.getElementById(`row-${Math.floor(row / 10) * 10}`);
-      if (label) label.scrollIntoView({ behavior: 'smooth' });
+    function selectTile(x, y, element) {
+      // Remove previous selection
+      document.querySelectorAll('.tile.selected').forEach(t => t.classList.remove('selected'));
+      element.classList.add('selected');
+
+      selectedTile = { x, y };
+
+      // Update preview
+      const preview = document.getElementById('previewCanvas');
+      const ctx = preview.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 0, 128, 128);
+      ctx.drawImage(currentImage, x * TILE_PX, y * TILE_PX, TILE_PX, TILE_PX, 0, 0, 128, 128);
+
+      // Update coord display
+      document.getElementById('coordDisplay').innerHTML = `x: <strong>${x}</strong>, y: <strong>${y}</strong>`;
+
+      // Update code
+      document.getElementById('codeOutput').textContent =
+        `{ sheet: '${currentSheet}', x: ${x}, y: ${y} }`;
+    }
+
+    function copyCode() {
+      if (!selectedTile) return;
+      const code = `{ sheet: '${currentSheet}', x: ${selectedTile.x}, y: ${selectedTile.y} }`;
+      navigator.clipboard.writeText(code);
+      alert('Código copiado!');
+    }
+
+    function goToRow() {
+      const row = parseInt(document.getElementById('rowInput').value) || 0;
+      const container = document.getElementById('spriteContainer');
+      const cols = currentImage ? Math.floor(currentImage.width / TILE_PX) : 1;
+      container.scrollTop = row * (tileSize + 2);
+    }
+
+    function setZoom(size) {
+      tileSize = size;
+      document.querySelectorAll('.zoom-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.includes(size === 32 ? '1x' : size === 48 ? '1.5x' : size === 64 ? '2x' : '3x')) {
+          btn.classList.add('active');
+        }
+      });
+      renderGrid();
     }
 
     // Load initial sheet
-    loadSheet();
+    loadSheet('floors');
   </script>
 </body>
 </html>

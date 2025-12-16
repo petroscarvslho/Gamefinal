@@ -2,16 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import GameEngine from './components/GameEngine';
 import RPGDialogueBox from './components/RPGDialogueBox';
 import MapEditor from './components/MapEditor';
-import SpriteGenerator from './components/SpriteGenerator';
 import CharacterGenerator from './components/CharacterGenerator';
 import ModeSelector, { GameMode } from './components/ModeSelector';
 import Inventory from './components/Inventory';
-import LeonardoGenerator from './components/LeonardoGenerator';
+import MapCreator from './components/MapCreator';
 import ClinicalCaseViewer from './components/ClinicalCaseViewer';
-import TilePicker from './components/TilePicker';
+import SceneEditor from './components/SceneEditor';
 import { NPC, InventoryItem, ItemCategory, GAME_ITEMS } from './types';
 import { SPRITE_SHEETS } from './constants';
-import { loadLeonardoApiKey } from './services/leonardoAI';
 
 // Starter items for the player
 const STARTER_ITEMS: InventoryItem[] = [
@@ -36,12 +34,13 @@ const App: React.FC = () => {
   // Inicia direto no modo história para facilitar testes
   const [gameMode, setGameMode] = useState<GameMode>('story');
   const [activeNpc, setActiveNpc] = useState<NPC | null>(null);
-  const [showTilePicker, setShowTilePicker] = useState(false);
   const [showMapEditor, setShowMapEditor] = useState(false);
-  const [showSpriteGenerator, setShowSpriteGenerator] = useState(false);
   const [showCharacterGenerator, setShowCharacterGenerator] = useState(false);
-  const [showLeonardoGenerator, setShowLeonardoGenerator] = useState(false);
+  const [showMapCreator, setShowMapCreator] = useState(false);
   const [showClinicalCases, setShowClinicalCases] = useState(false);
+  const [showSceneEditor, setShowSceneEditor] = useState(false);
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const [buildMode, setBuildMode] = useState(false);
 
   // Inventory state
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
@@ -69,13 +68,6 @@ const App: React.FC = () => {
     setInventoryItems(prev => prev.filter(i => i.id !== item.id));
   }, []);
 
-  // Carregar Leonardo API key ao iniciar o app
-  useEffect(() => {
-    const apiKey = loadLeonardoApiKey();
-    if (apiKey) {
-      console.log('Leonardo AI: API key carregada automaticamente');
-    }
-  }, []);
 
   // Keyboard listener for inventory (I key)
   useEffect(() => {
@@ -102,20 +94,6 @@ const App: React.FC = () => {
         {/* Tools sidebar for build mode */}
         <div className="fixed top-4 right-4 z-40 flex flex-col items-end gap-2">
           <button
-            onClick={() => setShowSpriteGenerator(true)}
-            className="bg-purple-600/90 hover:bg-purple-500 text-white text-xs px-4 py-2 rounded border border-purple-400/30 shadow-lg backdrop-blur font-semibold"
-            style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '9px' }}
-          >
-            GERAR SPRITES (AI)
-          </button>
-          <button
-            onClick={() => setShowLeonardoGenerator(true)}
-            className="bg-gradient-to-r from-purple-600/90 to-pink-600/90 hover:from-purple-500 hover:to-pink-500 text-white text-xs px-4 py-2 rounded border border-purple-400/30 shadow-lg backdrop-blur font-semibold"
-            style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '9px' }}
-          >
-            LEONARDO AI
-          </button>
-          <button
             onClick={() => setShowCharacterGenerator(true)}
             className="bg-cyan-600/90 hover:bg-cyan-500 text-white text-xs px-4 py-2 rounded border border-cyan-400/30 shadow-lg backdrop-blur font-semibold"
             style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '9px' }}
@@ -123,14 +101,6 @@ const App: React.FC = () => {
             CRIAR PERSONAGEM
           </button>
         </div>
-
-        {showSpriteGenerator && (
-          <SpriteGenerator onClose={() => setShowSpriteGenerator(false)} />
-        )}
-
-        {showLeonardoGenerator && (
-          <LeonardoGenerator onClose={() => setShowLeonardoGenerator(false)} />
-        )}
 
         {showCharacterGenerator && (
           <CharacterGenerator onClose={() => setShowCharacterGenerator(false)} />
@@ -145,6 +115,7 @@ const App: React.FC = () => {
       <GameEngine
         isDialogueOpen={!!activeNpc}
         onInteract={(npc) => setActiveNpc(npc)}
+        buildMode={buildMode}
       />
 
       {/* UI Overlay for controls hint */}
@@ -258,27 +229,37 @@ const App: React.FC = () => {
 
       {/* Editor & Tools buttons (Story mode) */}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
-        <button
-          onClick={() => setShowMapEditor(true)}
-          className="bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded border border-emerald-400/30 shadow-lg backdrop-blur font-semibold"
-          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '9px' }}
-        >
-          EDITOR DE MAPAS
-        </button>
-        <button
-          onClick={() => setShowSpriteGenerator(true)}
-          className="bg-purple-600/90 hover:bg-purple-500 text-white text-xs px-4 py-2 rounded border border-purple-400/30 shadow-lg backdrop-blur font-semibold"
-          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '9px' }}
-        >
-          GERAR SPRITES (AI)
-        </button>
-        <button
-          onClick={() => setShowLeonardoGenerator(true)}
-          className="bg-gradient-to-r from-purple-600/90 to-pink-600/90 hover:from-purple-500 hover:to-pink-500 text-white text-xs px-4 py-2 rounded border border-purple-400/30 shadow-lg backdrop-blur font-semibold"
-          style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '9px' }}
-        >
-          LEONARDO AI
-        </button>
+        {/* Menu CRIE SEU JOGO */}
+        <div className="relative">
+          <button
+            onClick={() => setShowCreateMenu(!showCreateMenu)}
+            className={`${showCreateMenu ? 'bg-gradient-to-r from-orange-500 to-purple-500' : 'bg-gradient-to-r from-orange-600/90 to-purple-600/90'} hover:from-orange-500 hover:to-purple-500 text-white text-xs px-4 py-2 rounded border border-orange-400/30 shadow-lg backdrop-blur font-semibold flex items-center gap-2`}
+            style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '9px' }}
+          >
+            <span>🎮</span> CRIE SEU JOGO <span>{showCreateMenu ? '▼' : '▶'}</span>
+          </button>
+
+          {/* Submenu */}
+          {showCreateMenu && (
+            <div className="absolute bottom-full right-0 mb-2 bg-slate-800/95 rounded-lg border border-slate-600 shadow-xl overflow-hidden min-w-[200px]">
+              <button
+                onClick={() => { setShowMapCreator(true); setShowCreateMenu(false); }}
+                className="w-full px-4 py-2 text-left text-xs text-slate-200 hover:bg-orange-600 flex items-center gap-2"
+                style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '8px' }}
+              >
+                <span>🗺️</span> CRIAR MAPA
+              </button>
+              <button
+                onClick={() => { setShowSceneEditor(true); setShowCreateMenu(false); }}
+                className="w-full px-4 py-2 text-left text-xs text-slate-200 hover:bg-purple-600 flex items-center gap-2"
+                style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '8px' }}
+              >
+                <span>👥</span> EDITOR DE CENAS (NPCs)
+              </button>
+            </div>
+          )}
+        </div>
+
         <button
           onClick={() => setShowCharacterGenerator(true)}
           className="bg-cyan-600/90 hover:bg-cyan-500 text-white text-xs px-4 py-2 rounded border border-cyan-400/30 shadow-lg backdrop-blur font-semibold"
@@ -286,13 +267,7 @@ const App: React.FC = () => {
         >
           CRIAR PERSONAGEM
         </button>
-        <button
-          onClick={() => setShowTilePicker(true)}
-          className="bg-slate-800/80 text-white text-xs px-3 py-2 rounded border border-white/10 shadow-lg backdrop-blur"
-        >
-          Tile Picker
-        </button>
-      </div>
+        </div>
 
       {activeNpc && (
         <RPGDialogueBox
@@ -305,13 +280,6 @@ const App: React.FC = () => {
       {showMapEditor && (
         <MapEditor
           onClose={() => setShowMapEditor(false)}
-        />
-      )}
-
-      {/* Sprite Generator (PixelLab AI) */}
-      {showSpriteGenerator && (
-        <SpriteGenerator
-          onClose={() => setShowSpriteGenerator(false)}
         />
       )}
 
@@ -331,17 +299,17 @@ const App: React.FC = () => {
         onDropItem={handleDropItem}
       />
 
-      {/* Leonardo AI Generator */}
-      {showLeonardoGenerator && (
-        <LeonardoGenerator
-          onClose={() => setShowLeonardoGenerator(false)}
+      {/* Map Creator */}
+      {showMapCreator && (
+        <MapCreator
+          onClose={() => setShowMapCreator(false)}
         />
       )}
 
-      {/* Tile Picker */}
-      {showTilePicker && (
-        <TilePicker
-          onClose={() => setShowTilePicker(false)}
+      {/* Scene Editor */}
+      {showSceneEditor && (
+        <SceneEditor
+          onClose={() => setShowSceneEditor(false)}
         />
       )}
 

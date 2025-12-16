@@ -98,19 +98,26 @@ export const TILE_SPRITES: Partial<Record<TileType, SpriteMapping>> = {
   [TileType.PLANT]: { sheet: 'hospital', x: 1, y: 65 }, // Planta
   [TileType.VENDING_MACHINE]: { sheet: 'hospital', x: 5, y: 65 }, // Máquina vendas
 
-  // --- ESTRUTURA ---
-  // floors: 15 cols x 40 rows (480x1280px) - cada grupo tem ~4 variações
-  // Piso bege claro para hospital (coluna 4, linha 4 - área bege/neutra)
-  [TileType.FLOOR]: { sheet: 'floors', x: 4, y: 4 },
+  // === ESTRUTURA DO HOSPITAL ===
+  // floors: 15 cols x 40 rows (480x1280px)
+  // walls: 32 cols x 40 rows (1024x1280px)
+  // roomBuilder: 76 cols x 113 rows (2432x3616px)
 
-  // Piso azulejo branco limpo para sala cirúrgica (coluna 0, linha 0)
-  [TileType.FLOOR_OR]: { sheet: 'floors', x: 0, y: 0 },
+  // --- PISOS ---
+  // Piso CINZA para hospital - linha 33 (pisos neutros)
+  [TileType.FLOOR]: { sheet: 'floors', x: 1, y: 33 },
 
-  // Parede: textura branca/bege lisa para hospital (linha 4 tem paredes mais claras)
-  [TileType.WALL]: { sheet: 'walls', x: 2, y: 4 },
+  // Piso para sala cirúrgica - linha 35 (variação)
+  [TileType.FLOOR_OR]: { sheet: 'floors', x: 1, y: 35 },
 
-  // Porta do Room_Builder
-  [TileType.DOOR]: { sheet: 'roomBuilder', x: 56, y: 82 },
+  // --- PAREDES ---
+  // Parede clara para hospital (y:0 = mais clara)
+  [TileType.WALL]: { sheet: 'walls', x: 0, y: 0 },
+
+  // --- PORTAS ---
+  // Porta cinza do Room_Builder (área de portas na parte inferior)
+  // roomBuilder: 76 cols x 113 rows - portas começam ~y:85, porta cinza ~x:47
+  [TileType.DOOR]: { sheet: 'roomBuilder', x: 47, y: 86 },
 };
 
 // Classe para gerenciar carregamento e renderização de sprites
@@ -123,7 +130,7 @@ class TilesetManager {
   // Carrega todos os sprite sheets
   async loadAll(): Promise<void> {
     const promises = Object.entries(SPRITE_SHEETS).map(([key, path]) =>
-      this.loadImage(key, path)
+      this.loadImage(key, path).catch(() => null)
     );
     await Promise.all(promises);
     this.loadCustomMappings();

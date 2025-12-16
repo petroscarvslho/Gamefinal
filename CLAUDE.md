@@ -1,6 +1,6 @@
 # MediQuest - Projeto de Jogo Hospital RPG
 
-**Última atualização:** 2024-12-16
+**Última atualização:** 2025-12-16
 
 ## ⚠️ IMPORTANTE - ANTES DE FECHAR O CHAT
 Sempre atualize este arquivo (CLAUDE.md) e o arquivo `/Users/priscoleao/iniciar_novo_terminal.txt` com o estado atual do projeto antes de encerrar a sessão.
@@ -92,10 +92,20 @@ screencapture -x /tmp/game_screenshot.png
   - Adicionado `Room_Builder_Walls_32x32.png` para paredes
   - Adicionado `Hospital_Theme_32x32.png` para referência
 
-- **Mapeamento Correto de Pisos e Paredes:**
-  - Piso bege quadriculado (floors x:4, y:4)
-  - Piso azulejo branco para sala cirúrgica (floors x:0, y:0)
-  - Parede textura bege/creme hospital (walls x:2, y:4)
+- **Mapeamento Correto de Pisos e Paredes (FINAL v2):**
+  - Piso cinza claro hospital: floors x:1, y:33
+  - Piso creme sala cirúrgica: floors x:1, y:1
+  - Parede branca hospital: walls x:0, y:2
+  - Porta: roomBuilder x:47, y:86
+
+- **Correção importante no GameEngine:**
+  - Sprites LimeZu agora são renderizados PRIMEIRO (antes do fallback canvas)
+  - Mapa agora usa mapRef.current (editável) em vez de INITIAL_MAP
+
+- **Modo Construção:**
+  - Botão "MODO CONSTRUÇÃO" adicionado acima de "Editor de Mapas"
+  - Permite editar tiles clicando diretamente no mapa
+  - UI com seleção de tile (Piso, Parede, Centro Cir., Porta)
 
 - **UX Melhorada:**
   - Jogo inicia direto no modo história
@@ -126,7 +136,91 @@ screencapture -x /tmp/game_screenshot.png
 ## Próximos Passos
 - [x] ~~Melhorar mapeamento de paredes e pisos do Room_Builder~~
 - [x] ~~Recriar layout do mapa baseado na referência~~
+- [x] ~~Criar Editor de Cenas avançado~~
 - [ ] Adicionar mais animações aos equipamentos (usando 3_Animated_objects)
 - [ ] Melhorar textura das paredes com sistema de auto-tiling
 - [ ] Adicionar mais NPCs com diálogos específicos
 - [ ] Integrar minigames do PixelMed Pro
+
+### 2024-12-16 (Atualização 3 - Editor de Cenas)
+- **Editor de Cenas Completo** (`/components/SceneEditor.tsx`):
+  - Seletor visual de tiles de TODOS os sprite sheets LimeZu
+  - Sistema de camadas (Chão e Objetos)
+  - Ferramentas: Pintar, Apagar, Adicionar NPC, Colisão, Spawn Point
+  - Templates de NPCs (Médico, Enfermeira, Cirurgião, Anestesista, etc.)
+  - Sistema de múltiplas cenas com templates
+  - Salvar/Carregar projetos no localStorage
+  - Exportar código para uso no jogo
+  - Zoom configurável (0.5x a 2x)
+  - Grid e visualização de colisões
+  - Brush configurável (1x1, 3x3, 5x5)
+
+- **Acesso:**
+  - Botão "EDITOR DE CENAS" (roxo) no lado direito do jogo
+
+- **Tile Preview** melhorado (`/public/tile-preview.html`):
+  - Tabs para todos os sprite sheets
+  - Zoom, navegação por linha
+  - Preview e código para copiar
+
+### 2024-12-16 (Atualização 4 - Simplificação da Interface)
+- **Menu "CRIE SEU JOGO" Simplificado:**
+  - Apenas 2 opções: "CRIAR MAPA" e "EDITOR DE CENAS (NPCs)"
+  - Removido botão "LEONARDO AI" (não é mais necessário)
+  - Removido botão standalone "GERAR SPRITES (AI)"
+
+- **MapCreator Completo** (`/components/MapCreator.tsx`):
+  - Editor de mapas visual com todas as tiles LimeZu
+  - Categorias: Pisos, Paredes, Hospital, Móveis, Objetos, Banheiro, Construção
+  - Ferramentas: Pincel, Borracha com tamanhos configuráveis (1, 3, 5, 7)
+  - Zoom, grid toggle, pan de câmera
+  - Novo/Abrir/Salvar mapas no localStorage
+  - **"GERAR SPRITES (AI)" integrado** - agora está dentro do editor de mapas
+
+- **SceneEditor Focado em NPCs** (`/components/SceneEditor.tsx`):
+  - Removidas todas as opções de tiles
+  - Apenas para adicionar NPCs em mapas existentes
+  - 47+ templates de NPCs organizados por categoria
+  - Seção "ESCOLHA UM MAPA" para carregar mapas salvos
+
+- **Estrutura Atualizada:**
+  ```
+  components/
+  ├── MapCreator.tsx       # NOVO - Editor completo de mapas + GERAR SPRITES
+  ├── SceneEditor.tsx      # Modificado - Apenas NPCs
+  ├── SpriteGenerator.tsx  # Gerador de sprites PixelLab (chamado pelo MapCreator)
+  └── ...
+  ```
+
+### 2025-12-16 (Atualização 5 - MapCreator v3 Enhanced)
+- **MapCreator v3 - Melhorias de UX:**
+  - **Canvas Limpo:** Mapa inicia vazio com padrão xadrez escuro (sem quadrados brancos feios)
+  - **Tiles Vazios:** Sistema de tiles vazios `[-1, 0, 0]` para áreas não pintadas
+  - **Undo/Redo:** Histórico de 50 estados com Ctrl+Z e Ctrl+Shift+Z
+  - **Toast Notifications:** Feedback visual para ações (salvar, carregar, undo/redo)
+  - **Mini-mapa:** Navegação rápida com indicador de viewport (toggle com M)
+  - **Coordenadas:** Exibe posição do cursor no mapa (📍 x, y)
+  - **Cursor Preview:** Visualização do tile antes de pintar (transparência 50%)
+  - **Eraser Preview:** Contorno tracejado vermelho ao apagar
+  - **Tiles Recentes:** Aba com últimas 16 tiles usadas (salvo no localStorage)
+  - **Fill Tool:** Ferramenta balde para preencher áreas (tecla F)
+  - **Zoom com Ctrl+Scroll:** Zoom suave no mapa
+
+- **Atalhos de Teclado:**
+  - `B` - Pincel
+  - `E` - Borracha
+  - `F` - Balde (fill)
+  - `G` - Toggle grid
+  - `M` - Toggle mini-mapa
+  - `1-4` - Tamanho do pincel (1, 3, 5, 7)
+  - `+/-` - Zoom
+  - `Ctrl+Z` - Desfazer
+  - `Ctrl+Shift+Z` - Refazer
+  - `Ctrl+S` - Salvar mapa
+  - `ESC` - Fechar modais
+
+- **Correções de Bugs:**
+  - Canvas ref callbacks não causam mais re-renders
+  - Scroll do tile selector limitado ao tamanho da imagem
+  - Câmera não ultrapassa limites do mapa
+  - Deletar mapas salvos funciona corretamente

@@ -122,8 +122,9 @@ const TilePicker: React.FC<TilePickerProps> = ({ onClose, onMappingChange }) => 
     const displayWidth = sheetImage.width * zoom;
     const displayHeight = sheetImage.height * zoom;
 
-    canvas.width = Math.min(displayWidth, 800);
-    canvas.height = Math.min(displayHeight, 500);
+    // Canvas maior para melhor visualização
+    canvas.width = Math.min(displayWidth, 1200);
+    canvas.height = Math.min(displayHeight, 600);
 
     ctx.fillStyle = '#1e293b';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -262,14 +263,26 @@ const TilePicker: React.FC<TilePickerProps> = ({ onClose, onMappingChange }) => 
     ? MAPPABLE_TILES
     : MAPPABLE_TILES.filter(t => t.category === filterCategory);
 
+  // Informações do sprite sheet atual
+  const sheetInfo = sheetImage ? {
+    cols: Math.floor(sheetImage.width / TILE_SIZE),
+    rows: Math.floor(sheetImage.height / TILE_SIZE),
+    totalTiles: Math.floor(sheetImage.width / TILE_SIZE) * Math.floor(sheetImage.height / TILE_SIZE),
+  } : null;
+
   return (
-    <div className="fixed inset-0 z-[80] bg-black/95 flex flex-col p-4">
+    <div className="fixed inset-0 z-[80] bg-black/95 flex flex-col p-2">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <h2 className="text-cyan-400 text-lg" style={{ fontFamily: '"Press Start 2P", monospace' }}>
-          TILE PICKER
+          TILE PICKER - LimeZu Assets
         </h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {sheetInfo && (
+            <span className="text-slate-400 text-xs mr-4">
+              {sheetInfo.cols}x{sheetInfo.rows} tiles ({sheetInfo.totalTiles} total)
+            </span>
+          )}
           <button
             onClick={exportMappings}
             className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded text-white text-sm"
@@ -285,26 +298,45 @@ const TilePicker: React.FC<TilePickerProps> = ({ onClose, onMappingChange }) => 
         </div>
       </div>
 
-      <div className="flex flex-1 gap-4 overflow-hidden">
+      <div className="flex flex-1 gap-2 overflow-hidden">
         {/* Sprite Sheet Viewer */}
         <div className="flex-1 flex flex-col">
-          {/* Sheet selector */}
-          <div className="flex gap-2 mb-2">
+          {/* Sheet selector - tabs maiores */}
+          <div className="flex gap-1 mb-2 flex-wrap">
             {Object.keys(SPRITE_SHEETS).map(sheet => (
               <button
                 key={sheet}
-                onClick={() => setSelectedSheet(sheet as keyof typeof SPRITE_SHEETS)}
-                className={`px-3 py-1 rounded text-sm ${
+                onClick={() => {
+                  setSelectedSheet(sheet as keyof typeof SPRITE_SHEETS);
+                  setScrollPos({ x: 0, y: 0 });
+                }}
+                className={`px-4 py-2 rounded text-sm font-bold ${
                   selectedSheet === sheet
                     ? 'bg-cyan-600 text-white'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                 }`}
               >
-                {sheet}
+                {sheet.toUpperCase()}
               </button>
             ))}
-            <span className="text-slate-400 text-sm ml-4">
-              Zoom: {zoom}x | Scroll: roda do mouse | Zoom: Ctrl+roda
+          </div>
+
+          {/* Zoom controls */}
+          <div className="flex gap-2 mb-2 items-center">
+            <span className="text-slate-400 text-sm">Zoom:</span>
+            {[1, 2, 3, 4].map(z => (
+              <button
+                key={z}
+                onClick={() => setZoom(z)}
+                className={`px-3 py-1 rounded text-sm ${
+                  zoom === z ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                {z}x
+              </button>
+            ))}
+            <span className="text-slate-500 text-xs ml-4">
+              Scroll: roda do mouse | Clique para selecionar
             </span>
           </div>
 
@@ -392,14 +424,14 @@ const TilePicker: React.FC<TilePickerProps> = ({ onClose, onMappingChange }) => 
             SALVAR MAPEAMENTO
           </button>
 
-          {/* Preview */}
+          {/* Preview MAIOR */}
           {selectedTile && sheetImage && (
-            <div className="mt-4 p-3 bg-slate-900 rounded-lg">
-              <p className="text-slate-400 text-xs mb-2">Preview:</p>
+            <div className="mt-4 p-4 bg-slate-900 rounded-lg">
+              <p className="text-cyan-400 text-sm font-bold mb-2 text-center">PREVIEW</p>
               <canvas
-                width={64}
-                height={64}
-                className="mx-auto"
+                width={128}
+                height={128}
+                className="mx-auto border-2 border-cyan-500"
                 style={{ imageRendering: 'pixelated' }}
                 ref={previewCanvas => {
                   if (!previewCanvas) return;
@@ -407,17 +439,23 @@ const TilePicker: React.FC<TilePickerProps> = ({ onClose, onMappingChange }) => 
                   if (!ctx) return;
                   ctx.imageSmoothingEnabled = false;
                   ctx.fillStyle = '#0f172a';
-                  ctx.fillRect(0, 0, 64, 64);
+                  ctx.fillRect(0, 0, 128, 128);
                   ctx.drawImage(
                     sheetImage,
                     selectedTile.x * TILE_SIZE,
                     selectedTile.y * TILE_SIZE,
                     TILE_SIZE,
                     TILE_SIZE,
-                    0, 0, 64, 64
+                    0, 0, 128, 128
                   );
                 }}
               />
+              <p className="text-green-400 text-sm text-center mt-2 font-mono">
+                x: {selectedTile.x}, y: {selectedTile.y}
+              </p>
+              <p className="text-slate-500 text-xs text-center">
+                sheet: {selectedSheet}
+              </p>
             </div>
           )}
 
