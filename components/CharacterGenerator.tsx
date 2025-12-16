@@ -32,28 +32,83 @@ const BODIES = Array.from({ length: 9 }, (_, i) => ({
   name: `Corpo ${i + 1}`,
 }));
 
+// Componente de ícone pixel art
+const PixelIcon: React.FC<{ type: string; size?: number }> = ({ type, size = 16 }) => {
+  const icons: Record<string, { bg: string; symbol: string; color: string }> = {
+    // Roupas
+    casual: { bg: '#4ade80', symbol: 'C', color: '#fff' },
+    formal: { bg: '#3b82f6', symbol: 'F', color: '#fff' },
+    sport: { bg: '#f97316', symbol: 'S', color: '#fff' },
+    jaleco: { bg: '#f8fafc', symbol: '+', color: '#ef4444' },
+    scrubs: { bg: '#06b6d4', symbol: 'H', color: '#fff' },
+    paciente: { bg: '#a78bfa', symbol: 'P', color: '#fff' },
+    vestido: { bg: '#ec4899', symbol: 'V', color: '#fff' },
+    uniforme: { bg: '#1e40af', symbol: 'U', color: '#fbbf24' },
+    // Cabelos
+    curto: { bg: '#78716c', symbol: '▪', color: '#fff' },
+    medio: { bg: '#78716c', symbol: '▬', color: '#fff' },
+    longo: { bg: '#78716c', symbol: '▼', color: '#fff' },
+    rabo: { bg: '#78716c', symbol: '◐', color: '#fff' },
+    coque: { bg: '#78716c', symbol: '●', color: '#fff' },
+    franja: { bg: '#78716c', symbol: '▲', color: '#fff' },
+    undercut: { bg: '#78716c', symbol: '◧', color: '#fff' },
+    afro: { bg: '#78716c', symbol: '◉', color: '#fff' },
+    // Seções
+    corpo: { bg: '#22d3ee', symbol: '♦', color: '#0f172a' },
+    roupa: { bg: '#22d3ee', symbol: '■', color: '#0f172a' },
+    cabelo: { bg: '#22d3ee', symbol: '▲', color: '#0f172a' },
+    olhos: { bg: '#22d3ee', symbol: '◎', color: '#0f172a' },
+    // Ações
+    random: { bg: '#a855f7', symbol: '?', color: '#fff' },
+    salvar: { bg: '#10b981', symbol: '◆', color: '#fff' },
+    exportar: { bg: '#f59e0b', symbol: '↓', color: '#fff' },
+    vazio: { bg: '#334155', symbol: '○', color: '#64748b' },
+  };
+
+  const icon = icons[type] || { bg: '#64748b', symbol: '?', color: '#fff' };
+
+  return (
+    <span
+      className="inline-flex items-center justify-center font-bold"
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: icon.bg,
+        color: icon.color,
+        fontSize: size * 0.6,
+        borderRadius: 2,
+        border: '1px solid rgba(0,0,0,0.3)',
+        boxShadow: 'inset 0 -2px 0 rgba(0,0,0,0.2)',
+        fontFamily: 'monospace',
+      }}
+    >
+      {icon.symbol}
+    </span>
+  );
+};
+
 // Roupas organizadas por estilo e variação de cor (baseado nos arquivos reais)
 const OUTFIT_STYLES = [
-  { id: 1, name: 'Casual', colors: 10, icon: '👕' },
-  { id: 2, name: 'Formal', colors: 4, icon: '👔' },
-  { id: 3, name: 'Esportivo', colors: 4, icon: '🏃' },
-  { id: 4, name: 'Jaleco', colors: 3, icon: '🥼' },
-  { id: 5, name: 'Scrubs', colors: 5, icon: '🏥' },
-  { id: 6, name: 'Paciente', colors: 4, icon: '🛏️' },
-  { id: 7, name: 'Vestido', colors: 6, icon: '👗' },
-  { id: 8, name: 'Uniforme', colors: 4, icon: '👮' },
+  { id: 1, name: 'Casual', colors: 10, iconType: 'casual' },
+  { id: 2, name: 'Formal', colors: 4, iconType: 'formal' },
+  { id: 3, name: 'Esportivo', colors: 4, iconType: 'sport' },
+  { id: 4, name: 'Jaleco', colors: 3, iconType: 'jaleco' },
+  { id: 5, name: 'Scrubs', colors: 5, iconType: 'scrubs' },
+  { id: 6, name: 'Paciente', colors: 4, iconType: 'paciente' },
+  { id: 7, name: 'Vestido', colors: 6, iconType: 'vestido' },
+  { id: 8, name: 'Uniforme', colors: 4, iconType: 'uniforme' },
 ];
 
 // Cabelos organizados por estilo e cor
 const HAIRSTYLE_STYLES = [
-  { id: 1, name: 'Curto', colors: 7, icon: '💇' },
-  { id: 2, name: 'Médio', colors: 7, icon: '💇‍♀️' },
-  { id: 3, name: 'Longo', colors: 7, icon: '👩‍🦰' },
-  { id: 4, name: 'Rabo', colors: 7, icon: '👧' },
-  { id: 5, name: 'Coque', colors: 7, icon: '👩‍🦳' },
-  { id: 6, name: 'Franja', colors: 7, icon: '👨‍🦱' },
-  { id: 7, name: 'Undercut', colors: 7, icon: '💈' },
-  { id: 8, name: 'Afro', colors: 7, icon: '👨‍🦲' },
+  { id: 1, name: 'Curto', colors: 7, iconType: 'curto' },
+  { id: 2, name: 'Médio', colors: 7, iconType: 'medio' },
+  { id: 3, name: 'Longo', colors: 7, iconType: 'longo' },
+  { id: 4, name: 'Rabo', colors: 7, iconType: 'rabo' },
+  { id: 5, name: 'Coque', colors: 7, iconType: 'coque' },
+  { id: 6, name: 'Franja', colors: 7, iconType: 'franja' },
+  { id: 7, name: 'Undercut', colors: 7, iconType: 'undercut' },
+  { id: 8, name: 'Afro', colors: 7, iconType: 'afro' },
 ];
 
 const EYES = Array.from({ length: 7 }, (_, i) => ({
@@ -481,23 +536,23 @@ const CharacterGenerator: React.FC<CharacterGeneratorProps> = ({ onClose, onChar
             <div className="flex gap-2 mt-4 w-full">
               <button
                 onClick={randomize}
-                className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 rounded-lg text-white text-xs font-medium transition-colors border border-purple-400/30"
+                className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 rounded-lg text-white text-xs font-medium transition-colors border border-purple-400/30 flex items-center justify-center gap-2"
               >
-                🎲 Random
+                <PixelIcon type="random" size={14} /> Random
               </button>
               <button
                 onClick={saveCharacter}
-                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white text-xs font-medium transition-colors border border-emerald-400/30"
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white text-xs font-medium transition-colors border border-emerald-400/30 flex items-center justify-center gap-2"
               >
-                💾 Salvar
+                <PixelIcon type="salvar" size={14} /> Salvar
               </button>
             </div>
 
             <button
               onClick={exportSpriteSheet}
-              className="mt-2 w-full py-2 bg-amber-600 hover:bg-amber-500 rounded-lg text-white text-xs font-medium transition-colors border border-amber-400/30"
+              className="mt-2 w-full py-2 bg-amber-600 hover:bg-amber-500 rounded-lg text-white text-xs font-medium transition-colors border border-amber-400/30 flex items-center justify-center gap-2"
             >
-              📥 Exportar PNG
+              <PixelIcon type="exportar" size={14} /> Exportar PNG
             </button>
 
             {isLoading && (
@@ -512,31 +567,46 @@ const CharacterGenerator: React.FC<CharacterGeneratorProps> = ({ onClose, onChar
                 {/* Body */}
                 <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
                   <h3 className="text-cyan-400 text-xs font-bold mb-3 flex items-center gap-2">
-                    <span className="w-7 h-7 bg-cyan-500/20 rounded-lg flex items-center justify-center text-sm">👤</span>
+                    <PixelIcon type="corpo" size={20} />
                     CORPO
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {BODIES.map(body => (
-                      <button
-                        key={body.id}
-                        onClick={() => { setSelectedBody(body.id); setSelectedPremade(null); }}
-                        className={`w-14 h-14 rounded-lg border-2 transition-all flex items-center justify-center ${
-                          selectedBody === body.id && !selectedPremade
-                            ? 'border-cyan-400 bg-cyan-500/20 scale-110 shadow-lg shadow-cyan-500/20'
-                            : 'border-slate-600 hover:border-slate-400 bg-slate-800/50'
-                        }`}
-                        title={body.name}
-                      >
-                        <span className="text-2xl">{['🧑', '👨', '👩', '🧔', '👴', '👵', '🧒', '👶', '🧑‍🦰'][body.id - 1]}</span>
-                      </button>
-                    ))}
+                    {BODIES.map(body => {
+                      const bodyIcons = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+                      const skinTones = ['#ffedd5', '#fde68a', '#fecaca', '#d4a574', '#a78bfa', '#f0abfc', '#fcd34d', '#fca5a5', '#fed7aa'];
+                      return (
+                        <button
+                          key={body.id}
+                          onClick={() => { setSelectedBody(body.id); setSelectedPremade(null); }}
+                          className={`w-14 h-14 rounded-lg border-2 transition-all flex items-center justify-center ${
+                            selectedBody === body.id && !selectedPremade
+                              ? 'border-cyan-400 bg-cyan-500/20 scale-110 shadow-lg shadow-cyan-500/20'
+                              : 'border-slate-600 hover:border-slate-400 bg-slate-800/50'
+                          }`}
+                          title={body.name}
+                        >
+                          <span
+                            className="w-8 h-8 rounded flex items-center justify-center text-slate-900 font-bold text-lg"
+                            style={{
+                              backgroundColor: skinTones[body.id - 1],
+                              border: '2px solid rgba(0,0,0,0.2)',
+                              boxShadow: 'inset 0 -2px 0 rgba(0,0,0,0.15)',
+                              fontFamily: '"Press Start 2P", monospace',
+                              fontSize: '10px'
+                            }}
+                          >
+                            {bodyIcons[body.id - 1]}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Outfit */}
                 <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
                   <h3 className="text-cyan-400 text-xs font-bold mb-3 flex items-center gap-2">
-                    <span className="w-7 h-7 bg-cyan-500/20 rounded-lg flex items-center justify-center text-sm">👔</span>
+                    <PixelIcon type="roupa" size={20} />
                     ROUPA
                   </h3>
                   <div className="flex flex-wrap gap-2 mb-3">
@@ -554,7 +624,7 @@ const CharacterGenerator: React.FC<CharacterGeneratorProps> = ({ onClose, onChar
                             : 'border-slate-600 hover:border-slate-400 bg-slate-800/50 text-slate-300'
                         }`}
                       >
-                        <span>{style.icon}</span>
+                        <PixelIcon type={style.iconType} size={16} />
                         {style.name}
                       </button>
                     ))}
@@ -582,7 +652,7 @@ const CharacterGenerator: React.FC<CharacterGeneratorProps> = ({ onClose, onChar
                 {/* Hair */}
                 <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
                   <h3 className="text-cyan-400 text-xs font-bold mb-3 flex items-center gap-2">
-                    <span className="w-7 h-7 bg-cyan-500/20 rounded-lg flex items-center justify-center text-sm">💇</span>
+                    <PixelIcon type="cabelo" size={20} />
                     CABELO
                   </h3>
                   <div className="flex flex-wrap gap-2 mb-3">
@@ -600,7 +670,7 @@ const CharacterGenerator: React.FC<CharacterGeneratorProps> = ({ onClose, onChar
                             : 'border-slate-600 hover:border-slate-400 bg-slate-800/50 text-slate-300'
                         }`}
                       >
-                        <span>{style.icon}</span>
+                        <PixelIcon type={style.iconType} size={16} />
                         {style.name}
                       </button>
                     ))}
@@ -627,24 +697,47 @@ const CharacterGenerator: React.FC<CharacterGeneratorProps> = ({ onClose, onChar
                 {/* Eyes */}
                 <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
                   <h3 className="text-cyan-400 text-xs font-bold mb-3 flex items-center gap-2">
-                    <span className="w-7 h-7 bg-cyan-500/20 rounded-lg flex items-center justify-center text-sm">👁️</span>
+                    <PixelIcon type="olhos" size={20} />
                     OLHOS
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {EYES.map(eye => (
-                      <button
-                        key={eye.id}
-                        onClick={() => { setSelectedEyes(eye.id); setSelectedPremade(null); }}
-                        className={`w-14 h-14 rounded-lg border-2 transition-all flex items-center justify-center ${
-                          selectedEyes === eye.id && !selectedPremade
-                            ? 'border-cyan-400 bg-cyan-500/20 scale-110 shadow-lg shadow-cyan-500/20'
-                            : 'border-slate-600 hover:border-slate-400 bg-slate-800/50'
-                        }`}
-                        title={eye.name}
-                      >
-                        <span className="text-2xl">{['👁️', '😊', '😃', '😐', '😑', '🤔', '😴'][eye.id - 1]}</span>
-                      </button>
-                    ))}
+                    {EYES.map(eye => {
+                      const eyeStyles = [
+                        { symbol: '◎', label: 'Normal' },
+                        { symbol: '◠', label: 'Feliz' },
+                        { symbol: '◡', label: 'Alegre' },
+                        { symbol: '—', label: 'Neutro' },
+                        { symbol: '−', label: 'Fechado' },
+                        { symbol: '?', label: 'Confuso' },
+                        { symbol: 'z', label: 'Sono' },
+                      ];
+                      const style = eyeStyles[eye.id - 1];
+                      return (
+                        <button
+                          key={eye.id}
+                          onClick={() => { setSelectedEyes(eye.id); setSelectedPremade(null); }}
+                          className={`w-14 h-14 rounded-lg border-2 transition-all flex items-center justify-center ${
+                            selectedEyes === eye.id && !selectedPremade
+                              ? 'border-cyan-400 bg-cyan-500/20 scale-110 shadow-lg shadow-cyan-500/20'
+                              : 'border-slate-600 hover:border-slate-400 bg-slate-800/50'
+                          }`}
+                          title={style.label}
+                        >
+                          <span
+                            className="w-8 h-8 rounded flex items-center justify-center font-bold"
+                            style={{
+                              backgroundColor: '#1e293b',
+                              color: '#94a3b8',
+                              border: '2px solid #334155',
+                              fontFamily: 'monospace',
+                              fontSize: '18px'
+                            }}
+                          >
+                            {style.symbol}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -689,7 +782,9 @@ const CharacterGenerator: React.FC<CharacterGeneratorProps> = ({ onClose, onChar
               <div>
                 {savedCharacters.length === 0 ? (
                   <div className="text-center py-12">
-                    <span className="text-6xl mb-4 block">📭</span>
+                    <div className="mb-4 flex justify-center">
+                      <PixelIcon type="vazio" size={64} />
+                    </div>
                     <p className="text-slate-400">Nenhum personagem salvo ainda.</p>
                     <p className="text-slate-500 text-sm mt-2">
                       Crie e salve personagens na aba "Criar".
