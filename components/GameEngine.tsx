@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { INITIAL_MAP, TILE_SIZE, MAP_WIDTH, MAP_HEIGHT, MOVE_SPEED, INTERACTION_DISTANCE, CHARACTER_SPRITES } from '../constants';
 import { Direction, Entity, NPC, TileType } from '../types';
 import { dialogueManager } from '../services/dialogueManager';
+import { tilesetManager } from '../services/tilesetManager';
 
 interface GameEngineProps {
   onInteract: (npc: NPC) => void;
@@ -34,9 +35,10 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
   const requestRef = useRef<number>();
   const frameCountRef = useRef<number>(0);
 
-  // Sprite images - apenas personagens
+  // Sprite images - personagens e tilesets
   const characterImagesRef = useRef<Record<string, HTMLImageElement>>({});
   const charactersLoadedRef = useRef(false);
+  const tilesetsLoadedRef = useRef(false);
 
   const playerRef = useRef<Entity>({
     id: 'player',
@@ -239,6 +241,16 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
         console.warn(`Character sprite not found: ${img.src}`);
         loadedCount++;
       };
+    });
+  }, []);
+
+  // --- Load Tilesets (LimeZu interiors/hospital) ---
+  useEffect(() => {
+    tilesetManager.loadAll().then(() => {
+      tilesetsLoadedRef.current = true;
+      console.log('GameEngine: Tilesets carregados!');
+    }).catch(err => {
+      console.warn('GameEngine: Erro ao carregar tilesets:', err);
     });
   }, []);
 
@@ -485,7 +497,16 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
       ctx.fillRect(x + S - 1, y, 1, S);
     }
 
-    // 2. OBJETOS
+    // 2. TENTAR USAR SPRITE DO LIMEZU
+    if (tilesetsLoadedRef.current && tile !== TileType.FLOOR && tile !== TileType.FLOOR_OR) {
+      ctx.imageSmoothingEnabled = false;
+      const spriteDrawn = tilesetManager.drawTile(ctx, tile, x, y, 1);
+      if (spriteDrawn) {
+        return; // Sprite desenhado com sucesso, não precisa do fallback
+      }
+    }
+
+    // 3. FALLBACK - DESENHO CANVAS (caso sprite não disponível)
     switch (tile) {
       case TileType.WALL: {
         // Parede estilo SNES - com borda e gradiente
