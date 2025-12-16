@@ -78,6 +78,26 @@ screencapture -x /tmp/game_screenshot.png
 
 ## Changelog
 
+### 2024-12-16 (Atualização 2)
+- **Layout do Hospital Compacto (35x45 tiles):**
+  - Novo mapa baseado na referência LimeZu
+  - Recepção, corredores, quartos, farmácia, enfermaria, sala de espera
+  - Área administrativa e entrada principal
+
+- **Sprite Sheets Separados:**
+  - Adicionado `Room_Builder_Floors_32x32.png` para pisos
+  - Adicionado `Room_Builder_Walls_32x32.png` para paredes
+  - Adicionado `Hospital_Theme_32x32.png` para referência
+
+- **Mapeamento Correto de Pisos e Paredes:**
+  - Piso bege quadriculado (floors x:4, y:4)
+  - Piso azulejo branco para sala cirúrgica (floors x:0, y:0)
+  - Parede textura bege/creme hospital (walls x:2, y:4)
+
+- **UX Melhorada:**
+  - Jogo inicia direto no modo história
+  - Modo construção acessível pelo botão "Editor de Mapas"
+
 ### 2024-12-16
 - **Melhorias Visuais:**
   - Adicionado sistema de câmera suave com interpolação
@@ -101,7 +121,9 @@ screencapture -x /tmp/game_screenshot.png
   - Estilo visual baseado no LimeZu Modern Interiors
 
 ## Próximos Passos
-- [ ] Melhorar mapeamento de paredes e pisos do Room_Builder
-- [ ] Recriar layout do mapa baseado na referência
-- [ ] Adicionar mais animações aos equipamentos
+- [x] ~~Melhorar mapeamento de paredes e pisos do Room_Builder~~
+- [x] ~~Recriar layout do mapa baseado na referência~~
+- [ ] Adicionar mais animações aos equipamentos (usando 3_Animated_objects)
+- [ ] Melhorar textura das paredes com sistema de auto-tiling
+- [ ] Adicionar mais NPCs com diálogos específicos
 - [ ] Integrar minigames do PixelMed Pro
