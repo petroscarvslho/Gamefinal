@@ -33,7 +33,8 @@ const emitKey = (code: string, type: 'keydown' | 'keyup') => {
 };
 
 const App: React.FC = () => {
-  const [gameMode, setGameMode] = useState<GameMode>('menu');
+  // Inicia direto no modo história para facilitar testes
+  const [gameMode, setGameMode] = useState<GameMode>('story');
   const [activeNpc, setActiveNpc] = useState<NPC | null>(null);
   const [showTilePicker, setShowTilePicker] = useState(false);
   const [showMapEditor, setShowMapEditor] = useState(false);

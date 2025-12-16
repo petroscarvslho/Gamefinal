@@ -15,6 +15,9 @@ export const SPRITE_SHEETS = {
   roomBuilder: '/assets/limezu/interiors/Room_Builder_32x32.png',
   generic: '/assets/limezu/interiors/Generic_32x32.png',
   bathroom: '/assets/limezu/interiors/Bathroom_32x32.png',
+  // Sprite sheets separados para facilitar mapeamento
+  floors: '/assets/limezu/interiors/Room_Builder_Floors_32x32.png',
+  walls: '/assets/limezu/interiors/Room_Builder_Walls_32x32.png',
 };
 
 // Interface para mapeamento de sprite
@@ -95,15 +98,19 @@ export const TILE_SPRITES: Partial<Record<TileType, SpriteMapping>> = {
   [TileType.PLANT]: { sheet: 'hospital', x: 1, y: 65 }, // Planta
   [TileType.VENDING_MACHINE]: { sheet: 'hospital', x: 5, y: 65 }, // Máquina vendas
 
-  // --- ESTRUTURA (do Room_Builder - 76 cols x 113 rows) ---
-  // DESABILITADO - usando fallback canvas por enquanto para paredes
-  // [TileType.WALL]: { sheet: 'roomBuilder', x: 57, y: 4 },
-  // [TileType.DOOR]: { sheet: 'roomBuilder', x: 46, y: 80 },
+  // --- ESTRUTURA ---
+  // floors: 15 cols x 40 rows (480x1280px) - cada grupo tem ~4 variações
+  // Piso bege claro para hospital (coluna 4, linha 4 - área bege/neutra)
+  [TileType.FLOOR]: { sheet: 'floors', x: 4, y: 4 },
 
-  // --- PISOS - DESABILITADO temporariamente ---
-  // Usando fallback canvas até encontrar coordenadas corretas
-  // [TileType.FLOOR]: { sheet: 'roomBuilder', x: 19, y: 43 },
-  // [TileType.FLOOR_OR]: { sheet: 'roomBuilder', x: 4, y: 6 },
+  // Piso azulejo branco limpo para sala cirúrgica (coluna 0, linha 0)
+  [TileType.FLOOR_OR]: { sheet: 'floors', x: 0, y: 0 },
+
+  // Parede: textura branca/bege lisa para hospital (linha 4 tem paredes mais claras)
+  [TileType.WALL]: { sheet: 'walls', x: 2, y: 4 },
+
+  // Porta do Room_Builder
+  [TileType.DOOR]: { sheet: 'roomBuilder', x: 56, y: 82 },
 };
 
 // Classe para gerenciar carregamento e renderização de sprites
