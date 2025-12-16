@@ -8,6 +8,7 @@ import ModeSelector, { GameMode } from './components/ModeSelector';
 import Inventory from './components/Inventory';
 import LeonardoGenerator from './components/LeonardoGenerator';
 import ClinicalCaseViewer from './components/ClinicalCaseViewer';
+import TilePicker from './components/TilePicker';
 import { NPC, InventoryItem, ItemCategory, GAME_ITEMS } from './types';
 import { SPRITE_SHEETS } from './constants';
 import { loadLeonardoApiKey } from './services/leonardoAI';
@@ -35,8 +36,6 @@ const App: React.FC = () => {
   const [gameMode, setGameMode] = useState<GameMode>('menu');
   const [activeNpc, setActiveNpc] = useState<NPC | null>(null);
   const [showTilePicker, setShowTilePicker] = useState(false);
-  const [pickerTarget, setPickerTarget] = useState<string>('bed');
-  const [pickerSheet, setPickerSheet] = useState<'room' | 'interiors'>('room');
   const [showMapEditor, setShowMapEditor] = useState(false);
   const [showSpriteGenerator, setShowSpriteGenerator] = useState(false);
   const [showCharacterGenerator, setShowCharacterGenerator] = useState(false);
@@ -286,67 +285,11 @@ const App: React.FC = () => {
           CRIAR PERSONAGEM
         </button>
         <button
-          onClick={() => setShowTilePicker((v) => !v)}
+          onClick={() => setShowTilePicker(true)}
           className="bg-slate-800/80 text-white text-xs px-3 py-2 rounded border border-white/10 shadow-lg backdrop-blur"
         >
-          {showTilePicker ? 'Fechar Tile Picker' : 'Tile Picker'}
+          Tile Picker
         </button>
-        {showTilePicker && (
-          <div className="bg-slate-900/90 border border-cyan-300/40 rounded-lg shadow-2xl p-3 max-w-xs max-h-72 overflow-auto backdrop-blur">
-            <div className="text-xs text-slate-200 mb-2 space-y-1">
-              <div>Escolha o tileset e clique para salvar coords.</div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] text-slate-400">Tileset:</span>
-                <select
-                  className="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-white/10"
-                  value={pickerSheet}
-                  onChange={(e) => setPickerSheet(e.target.value as 'room' | 'interiors')}
-                >
-                  <option value="room">Room_Builder_32x32</option>
-                  <option value="interiors">Interiors_32x32</option>
-                </select>
-                <span className="text-[11px] text-slate-400 ml-1">Aplicar em:</span>
-                <select
-                  className="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-white/10"
-                  value={pickerTarget}
-                  onChange={(e) => setPickerTarget(e.target.value)}
-                >
-                  <option value="bed">bed</option>
-                  <option value="chair">chair</option>
-                  <option value="floor">floor</option>
-                  <option value="floorWarm">floorWarm</option>
-                  <option value="wall">wall</option>
-                  <option value="wallAlt">wallAlt</option>
-                  <option value="door">door</option>
-                </select>
-                <button
-                  className="ml-2 bg-slate-800 text-white text-[11px] px-2 py-1 rounded border border-white/10"
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent('setTileOverride', { detail: { reset: true, key: pickerTarget, sheet: pickerSheet } }));
-                    alert(`Override de ${pickerTarget} limpo`);
-                  }}
-                >
-                  Limpar
-                </button>
-              </div>
-            </div>
-            <img
-              src={SPRITE_SHEETS[pickerSheet].src}
-              alt="Tileset"
-              className="max-w-full h-auto border border-white/10"
-              onClick={(e) => {
-                const rect = (e.target as HTMLImageElement).getBoundingClientRect();
-                const imgEl = e.target as HTMLImageElement;
-                const sheet = SPRITE_SHEETS[pickerSheet];
-                const tx = Math.floor(((e.clientX - rect.left) / rect.width) * (imgEl.naturalWidth / sheet.tileSize));
-                const ty = Math.floor(((e.clientY - rect.top) / rect.height) * (imgEl.naturalHeight / sheet.tileSize));
-                const detail = { sheet: pickerSheet, type: pickerTarget, x: tx, y: ty };
-                window.dispatchEvent(new CustomEvent('setTileOverride', { detail }));
-                alert(`Tile ${pickerTarget} (${pickerSheet}): x=${tx}, y=${ty} salvo`);
-              }}
-            />
-          </div>
-        )}
       </div>
 
       {activeNpc && (
@@ -390,6 +333,13 @@ const App: React.FC = () => {
       {showLeonardoGenerator && (
         <LeonardoGenerator
           onClose={() => setShowLeonardoGenerator(false)}
+        />
+      )}
+
+      {/* Tile Picker */}
+      {showTilePicker && (
+        <TilePicker
+          onClose={() => setShowTilePicker(false)}
         />
       )}
 
