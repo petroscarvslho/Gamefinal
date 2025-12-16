@@ -2,6 +2,9 @@
 
 **Última atualização:** 2024-12-16
 
+## ⚠️ IMPORTANTE - ANTES DE FECHAR O CHAT
+Sempre atualize este arquivo (CLAUDE.md) e o arquivo `/Users/priscoleao/iniciar_novo_terminal.txt` com o estado atual do projeto antes de encerrar a sessão.
+
 ## Localização do Projeto
 ```
 /Users/priscoleao/Gamefinal
