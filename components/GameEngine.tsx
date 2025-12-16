@@ -150,6 +150,20 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
   const keysPressed = useRef<Record<string, boolean>>({});
   const lastChatterTimeRef = useRef<Record<string, number>>({});
 
+  // === Sistema de Partículas ===
+  interface Particle {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    life: number;
+    maxLife: number;
+    size: number;
+    color: string;
+  }
+  const particlesRef = useRef<Particle[]>([]);
+  const lastParticleTimeRef = useRef<number>(0);
+
   // Falas ambientais dos NPCs
   const NPC_CHATTER: Record<string, string[]> = {
     receptionist: [
@@ -390,8 +404,36 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
       if (Math.abs(dy) > Math.abs(dx)) p.direction = dy > 0 ? Direction.DOWN : Direction.UP;
     }
 
-    // === NPC Chatter Ambiental ===
+    // === Partículas de Poeira ao Andar ===
     const now = Date.now();
+    const isMoving = dx !== 0 || dy !== 0;
+
+    if (isMoving && now - lastParticleTimeRef.current > 150) {
+      // Spawn partícula de poeira
+      const dustColors = ['#d4d0c4', '#cdc9bc', '#b8b4a8'];
+      particlesRef.current.push({
+        x: p.x + TILE_SIZE / 2 + (Math.random() - 0.5) * 8,
+        y: p.y + TILE_SIZE - 4,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: -Math.random() * 0.8 - 0.2,
+        life: 30,
+        maxLife: 30,
+        size: Math.random() * 3 + 2,
+        color: dustColors[Math.floor(Math.random() * dustColors.length)]
+      });
+      lastParticleTimeRef.current = now;
+    }
+
+    // Atualiza partículas
+    particlesRef.current = particlesRef.current.filter(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.02; // gravidade leve
+      p.life--;
+      return p.life > 0;
+    });
+
+    // === NPC Chatter Ambiental ===
     const CHATTER_INTERVAL = 8000; // 8 segundos entre falas
     const CHATTER_CHANCE = 0.15; // 15% chance a cada intervalo
 
@@ -2405,14 +2447,19 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     const frame = isMoving ? Math.floor(frameCountRef.current / 8) % 4 : 0;
     const spriteSize = 32;
 
-    // Sombra
+    // === Animação de Respiração (Idle) ===
+    const breatheOffset = !isMoving ? Math.sin(frameCountRef.current * 0.08) * 1.5 : 0;
+    const adjustedPy = py + breatheOffset;
+
+    // Sombra (escala com respiração)
+    const shadowScale = 1 + (!isMoving ? Math.sin(frameCountRef.current * 0.08) * 0.05 : 0);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
     ctx.beginPath();
-    ctx.ellipse(px + TILE_SIZE / 2, py + TILE_SIZE - 2, 12, 5, 0, 0, Math.PI * 2);
+    ctx.ellipse(px + TILE_SIZE / 2, py + TILE_SIZE - 2, 12 * shadowScale, 5 * shadowScale, 0, 0, Math.PI * 2);
     ctx.fill();
 
     if (img && charactersLoadedRef.current) {
-      // Desenha sprite do personagem
+      // Desenha sprite do personagem com breathing offset
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(
         img,
@@ -2421,13 +2468,13 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
         spriteSize,
         spriteSize,
         px,
-        py,
+        Math.floor(adjustedPy),
         TILE_SIZE,
         TILE_SIZE
       );
     } else {
       // Fallback: personagem estilizado
-      drawFallbackCharacter(ctx, entity, px, py, frame, isMoving);
+      drawFallbackCharacter(ctx, entity, px, Math.floor(adjustedPy), frame, isMoving);
     }
   };
 
@@ -2566,6 +2613,54 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
     ctx.restore();
   };
 
+  // --- Desenha Partículas ---
+  const drawParticles = (ctx: CanvasRenderingContext2D) => {
+    particlesRef.current.forEach(particle => {
+      const alpha = particle.life / particle.maxLife;
+      ctx.fillStyle = particle.color;
+      ctx.globalAlpha = alpha * 0.6;
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  };
+
+  // --- Efeito de Luz Pulsante em Equipamentos ---
+  const drawEquipmentGlow = (ctx: CanvasRenderingContext2D, x: number, y: number, tile: TileType) => {
+    // Equipamentos que têm luzes pulsantes
+    const glowingEquipment = [
+      TileType.ANESTHESIA_MACHINE,
+      TileType.PATIENT_MONITOR,
+      TileType.VENTILATOR,
+      TileType.DEFIBRILLATOR,
+      TileType.BIS_MONITOR,
+      TileType.CEC_MACHINE,
+      TileType.FETAL_MONITOR,
+    ];
+
+    if (!glowingEquipment.includes(tile)) return;
+
+    const pulse = Math.sin(frameCountRef.current * 0.1) * 0.5 + 0.5;
+    const glowSize = 3 + pulse * 2;
+
+    // Cor do glow baseada no equipamento
+    let glowColor = '#00ff88';
+    if (tile === TileType.DEFIBRILLATOR) glowColor = '#ff4444';
+    if (tile === TileType.CEC_MACHINE) glowColor = '#4488ff';
+    if (tile === TileType.FETAL_MONITOR) glowColor = '#ff88ff';
+
+    ctx.save();
+    ctx.globalAlpha = 0.3 + pulse * 0.4;
+    ctx.shadowBlur = glowSize * 2;
+    ctx.shadowColor = glowColor;
+    ctx.fillStyle = glowColor;
+    ctx.beginPath();
+    ctx.arc(x + TILE_SIZE / 2, y + 12, glowSize, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+
   // --- Main Render ---
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -2604,6 +2699,8 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
       for (let x = 0; x < MAP_WIDTH; x++) {
         const tile = INITIAL_MAP[y][x];
         drawTile(ctx, tile, x * TILE_SIZE, y * TILE_SIZE);
+        // Efeito de luz pulsante em equipamentos
+        drawEquipmentGlow(ctx, x * TILE_SIZE, y * TILE_SIZE, tile);
       }
 
       // Desenha entidades nesta linha (Y-sorting)
@@ -2654,6 +2751,9 @@ const GameEngine: React.FC<GameEngineProps> = ({ onInteract, isDialogueOpen }) =
       ctx.textBaseline = 'bottom';
       ctx.fillText('SPACE', px, py - 6);
     }
+
+    // Partículas de poeira
+    drawParticles(ctx);
 
     // Balões de fala ativos
     const bubbles = dialogueManager.updateBubbles();

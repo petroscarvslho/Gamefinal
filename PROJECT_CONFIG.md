@@ -108,6 +108,24 @@
   - Eventos intraoperatorios com complicacoes
   - Pontuacao e objetivos de aprendizado
 
+## Efeitos Visuais e Animacoes
+
+- **Particulas de Poeira:** Spawn automatico ao andar, gravidade leve, fade-out
+- **Animacao de Respiracao (Idle):** Personagens sobem/descem suavemente quando parados
+- **Luzes Pulsantes:** Equipamentos medicos (monitores, desfibrilador, CEC) com glow animado
+- **Sombras Dinamicas:** Escala com animacao de respiracao
+- **Vinheta:** Efeito escuro nas bordas da tela
+- **Y-Sorting:** Depth sorting correto para entidades
+
+### Equipamentos com Glow Animado
+- Maquina de Anestesia (verde)
+- Monitor Multiparametro (verde)
+- Ventilador (verde)
+- Desfibrilador (vermelho)
+- Monitor BIS (verde)
+- Maquina de CEC (azul)
+- Monitor Fetal (rosa)
+
 ## Controles do Jogo
 
 - **WASD / Setas:** Mover
